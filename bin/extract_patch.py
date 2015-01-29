@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -- coding: iso-8859-1 --
 
+
 from sys        import stdin, stdout, stderr
 from os.path    import exists, isdir
 from shutil     import rmtree
 from os         import mkdir, unlink, environ, chdir, rename
 from glob       import glob
 from subprocess import call
+
 
 def RM(name):
 	if exists(name):
@@ -15,26 +17,29 @@ def RM(name):
 		else:
 			unlink(name)
 
+
 def mkdir_new(name):
 	if exists(name):
 		RM(name)
 	mkdir(name)
 
+
 def get_sac_header(file, var):
-	tmpfile = '_tmp_'
-	oo=open(tmpfile,'w')
-	cmd = 'saclst %s f %s'%(var,file)
-	call(cmd, shell=True, stdin=stdin, stdout=oo, stderr=oo)
-	oo.close()
-	val = open(tmpfile,'r').readlines()[0].strip().split()[1]
-	unlink(tmpfile)
-	return val
-	
+    tmpfile = '_tmp_'
+    oo=open(tmpfile,'w')
+    cmd = 'saclst %s f %s'%(var,file)
+    call(cmd, shell=True, stdin=stdin, stdout=oo, stderr=oo)
+    oo.close()
+    val = open(tmpfile,'r').readlines()[0].strip().split()[1]
+    unlink(tmpfile) 
+    # All done
+    return val
+    
+
 def ch_sac_header(file, var, value):
 	cmd = 'sac<<FIN\nrh %s\nch %s %s\nwh\nq\nFIN\n'%(file,var,value)
 	call(cmd, shell=True, stdin=stdin, stdout=stdout, stderr=stderr)
 
-#######################
 
 def main():
 	TOL       = 5.   # degrees (cmpaz tolerance)
