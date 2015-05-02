@@ -5,7 +5,7 @@
        Z.Duputel, L.Rivera and H.Kanamori
 
 
-For a more complete documentation, please refer to http://wphase.unistra.fr/wiki/doku.php/wphase
+For a complete documentation, please refer to http://wphase.unistra.fr/wiki/doku.php/wphase
 
 #########################
 ## Dependencies
@@ -16,7 +16,7 @@ For a more complete documentation, please refer to http://wphase.unistra.fr/wiki
 > for MacOS users, it is necessary to install Coreutils
   which provide GNU Core Utilities. This can be done using 
   fink,macports or homebrew 
-> (optional; for graphical output) python modules: Numpy, Matplotlib, Basemap.
+> (optional; for graphical output) python modules: Numpy, Matplotlib, Basemap and netCDF4.
 > (optional; for graphical output) GMT4
 
 
@@ -33,7 +33,7 @@ setenv RDSEED      'path to the rdseed executable'
 
 (optional, see bellow) setenv ETOPOFILE 'path to ETOPO netCDF file'
 
-We strongly advice to separate the ${WPHASE_HOME} directory
+We strongly advise to separate the ${WPHASE_HOME} directory
 (i.e. the directory containing "bin" and "src") from the run
 directories (i.e. containing data, and output files). This is
 to make easier further updates. A good idea could be also to 
