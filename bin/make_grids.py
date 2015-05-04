@@ -249,7 +249,10 @@ def concatCmap(cmaps,offs,cuts,prop):
 
 def plot_etopo(file,m,ax):
     from copy import deepcopy
-    from mpl_toolkits.basemap import NetCDFFile
+    try:
+        from mpl_toolkits.basemap import NetCDFFile
+    except:
+        from netCDF4 import Dataset as NetCDFFile
     latll = m.llcrnrlat
     latur = m.urcrnrlat
     lonll = m.llcrnrlon
@@ -378,9 +381,9 @@ def plotxy(ifile='grid_search_xy_out',ofile='grid_search_xy.pdf',basemapflag=Fal
         plt.axes(ax1)
         m.drawcoastlines(linewidth=0.3)
         m.drawmeridians(np.arange(float(int(lonll)),lonur+delta,delta),labels=[0,0,0,1],
-                dashes=[1,0],linewidth=0.5,color='k')
+                dashes=[1,1],linewidth=0.5,color='k')
         m.drawparallels(np.arange(float(int(latll)),latur+delta,delta),labels=[1,0,0,0],
-                dashes=[1,0],linewidth=0.5,color='k')
+                dashes=[1,1],linewidth=0.5,color='k')
         # RMS misfit
         for la,lo,err,siz in zip(lat,lon,nrms,mksize):
             x,y = m(lo,la)
