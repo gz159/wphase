@@ -52,7 +52,7 @@ from subprocess import call
 # Import internal modules
 import sacpy
 import utils
-
+from EQ import EarthQuake
 
 
 
@@ -62,10 +62,8 @@ def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):
     if not m:
         from mpl_toolkits.basemap import Basemap
         if flagreg:
-            m = Basemap(llcrnrlon=evlo-DLON, llcrnrlat=evla-DLAT,
-                        urcrnrlon=evlo+DLON, urcrnrlat=evla+DLAT,
-                        projection='lcc',lat_1=evla-DLAT/2.,lat_2=evla+DLAT/2.,
-                        lon_0=evlo, resolution ='c',area_thresh=50. )
+            m = Basemap(projection='laea',lat_0=evla,lon_0=evlo,
+                        width=DLON*2.22e5, height=DLAT*2.22e5,resolution ='c')
         else:
             m = Basemap(projection='ortho',lat_0=evla,lon_0=evlo,resolution='c')
     pos  = ax.get_position().get_points()
@@ -74,8 +72,8 @@ def showBasemap(ax,evla,evlo,stla,stlo,coords,flagreg=False,m=None):
     m.drawcoastlines(linewidth=0.5,zorder=900)
     m.fillcontinents(color='0.75',lake_color=None)
     if flagreg:
-        m.drawparallels(np.arange(evla-DLAT,evla+DLAT,5.0),linewidth=0.2)
-        m.drawmeridians(np.arange(evlo-DLON,evlo+DLON,5.0),linewidth=0.2)
+        m.drawparallels(np.arange(evla-2*DLAT,evla+2*DLAT,5.0),linewidth=0.2)
+        m.drawmeridians(np.arange(evlo-2*DLON,evlo+2*DLON,5.0),linewidth=0.2)
     else:
         m.drawparallels(np.arange(-60,90,30.0),linewidth=0.2)
         m.drawmeridians(np.arange(0,420,60.0),linewidth=0.2)
@@ -163,6 +161,10 @@ def main(argv):
         if not solfile:
             raise IOError('No wcmtfile available, can be specified with --icmtf')
 
+    eq   = EarthQuake()
+    eq.rcmtfile(solfile)
+    cmtla,cmtlo = eq.lat, eq.lon    
+        
     # Title
     conf  = utils.parseConfig(imaster)
     title = '_'.join(conf['EVNAME'].split())
@@ -277,7 +279,7 @@ def main(argv):
             plt.xlabel('time, sec',fontsize=10) 
         plt.grid()
         try:
-            m = showBasemap(ax,sacdata.evla,sacdata.evlo,sacdata.stla,sacdata.stlo,coords,flagreg,m)
+            m = showBasemap(ax,cmtla,cmtlo,sacdata.stla,sacdata.stlo,coords,flagreg,m)
             pass
         except:
             showPolarmap(ax,sacdata.az,sacdata.dist,coords)
