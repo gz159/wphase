@@ -230,7 +230,7 @@ def main(argv):
             plt.suptitle(title+ ',   p %d/%d'%(pages,npages), fontsize=16, y=0.95)
             ofic = 'page_W_%02d.pdf'%(pages)
             print(ofic)
-            #fig.set_rasterized(True)
+            fig.set_rasterized(True)
             pp.savefig(orientation='landscape')
             plt.close()
             pages += 1
@@ -288,7 +288,7 @@ def main(argv):
         nchan += 1
     ofic = 'page_W_%02d.pdf'%(pages)
     print(ofic)
-    #fig.set_rasterized(True)
+    fig.set_rasterized(True)
     plt.suptitle(title + ',    p %d/%d'%(pages,npages), fontsize=16, y=0.95)
     pp.savefig(orientation='landscape')
     plt.close()
