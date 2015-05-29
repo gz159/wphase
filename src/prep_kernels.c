@@ -260,11 +260,6 @@ void save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan, char *
 }
 
 
-void rec_rm(char *dir)
-{
-  
-}
-
 void dispsynt(char **argv)
 {
     fprintf (stderr, "Syntax: %s i_sacs stftype [-imas] [-icmtf] [-gfdir] [-t] [-h]\n",argv[0]) ;
