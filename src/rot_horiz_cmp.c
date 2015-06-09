@@ -45,7 +45,7 @@
 
 /* Internal routines */
 void get_params(int argc, char **argv, char **scr_lst, char **o_lst, char **o_dir,
-                str_quake_params *eq);
+                struct_quake_params *eq);
 
 /* External routines */
 void distaz(double    cmt_lat,  double    cmt_lon,  float*    stlats,  float*    stlons, 
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     char   *o_dir, *sta, *net, *cmp, *prev_sta       ;
     FILE   *istaf, *ostaf       ;
     sachdr hdr1, hdr2, *hdproto ;
-    str_quake_params eq ;
+    struct_quake_params eq ;
 
     /* Input params */
     get_params(argc, argv, &scr_lst, &o_lst, &o_dir, &eq) ;
@@ -295,7 +295,7 @@ void get_char_arg(argv, j, i, numarg2, str)
 }
 
 
-void get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq)
+void get_opt(int numarg1, int numarg2, char **argv, struct_quake_params *eq)
 {
     int i,j,k;
 
@@ -319,7 +319,7 @@ void get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq)
         error_syntax(argv,"") ;
 }
 
-void get_params(int argc, char **argv, char **scr_lst, char **o_lst, char **o_dir, str_quake_params *eq)
+void get_params(int argc, char **argv, char **scr_lst, char **o_lst, char **o_dir, struct_quake_params *eq)
 {
     int numarg1, numarg2 ;
 

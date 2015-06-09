@@ -53,7 +53,7 @@ void makeid(char *id, sachdr *hdr) ;
 int  findid(char *id, char **ids, int n) ;
 void trapz(double *x_in, int npts, double dt, double *x_int) ;
 void get_id_dec(char *file, int *n, char ***id, double **a1, double **a2, double **a3) ;
-void get_filt_params(char *file, str_quake_params *eq) ;
+void get_filt_params(char *file, struct_quake_params *eq) ;
 
 
 int main(int argc, char *argv[])
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     char    *id, *o_sacfile ;
     FILE    *i_sacf, *o_sacf;
     sachdr  hdr;
-    str_quake_params eq ;
+    struct_quake_params eq ;
     struct tree *datfil ;
 
     /* Input params */
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
 /*           get_filt_params(file, eq)          */
 /************************************************/
 /*  > Read input file for recursive filtering   */
-void get_filt_params(char *file, str_quake_params *eq)
+void get_filt_params(char *file, struct_quake_params *eq)
 {
     int  i = 0  ;
     char **keys ;

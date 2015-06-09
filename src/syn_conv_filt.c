@@ -46,7 +46,7 @@
 /* internal functions */
 void get_sacs(char *file, int *n, char ***sacs) ;
 void get_params(int argc, char **argv, char **i_sacs, \
-                char **itype, char **i_master, str_quake_params *eq);
+                char **itype, char **i_master, struct_quake_params *eq);
 
 int main(int argc, char *argv[])
 {
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     double *b1, *b2, *a1, *a2, gain, dt=1.; 
     double *x_in, *x_conv;
     sachdr hdr ;
-    str_quake_params eq ;
+    struct_quake_params eq ;
     int    ngfcomp  = 6 ;
     char   *gfcomp[]={"rr","tt","pp","rt","rp","tp"};  
     /* SET INPUT PARAMETERS */
@@ -239,7 +239,7 @@ void get_char_arg(argv, j, i, numarg2, str)
     free((void*)comp)     ;
 }
 
-void get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq, char **i_master)
+void get_opt(int numarg1, int numarg2, char **argv, struct_quake_params *eq, char **i_master)
 {
     int i,j,k;
 
@@ -271,7 +271,7 @@ void get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq, char *
         error_syntax(argv,"") ;
 }
 
-void get_params(int argc, char **argv, char **i_sacs, char **itype, char **i_master, str_quake_params *eq)
+void get_params(int argc, char **argv, char **i_sacs, char **itype, char **i_master, struct_quake_params *eq)
 {
     int  numarg1, numarg2, i, nimas;
     char **keys ;

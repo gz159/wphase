@@ -59,7 +59,7 @@ void save_trace(double *TH, sachdr hdr, char *file)
     fclose(fd);
 }
 
-void output_products(structopt *opt, str_quake_params *eq, 
+void output_products(struct_opt *opt, struct_quake_params *eq, 
                                 sachdr *hd_synt, FILE *o_log, char **argv) 
 {
     int    i,j,k=0,p,nb,nb2,size,*nbcmp  ;
@@ -762,7 +762,7 @@ void get_gap(sachdr *hd_synt, int ns, double *gap)
 }
 
 void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, double *data_norm, 
-                   structopt *opt) 
+                   struct_opt *opt) 
 {
     int  i, n0;
     FILE *o_sac ;
@@ -819,7 +819,7 @@ void calc_stat(int npts, double *data, double *mi2ma, double *ave)
 /* Output: dcalc  : array of predicted data                  */
 /*         rms    : array of rms amplitudes and deviations   */
 /*         global_rms : overall rms amp. and rms deviations  */
-void calc_rms(int ns, sachdr *hd_synt, double **data, double ***dcalc, double **rms, double *global_rms, structopt *opt) 
+void calc_rms(int ns, sachdr *hd_synt, double **data, double ***dcalc, double **rms, double *global_rms, struct_opt *opt) 
 {
   int    i, j, n0, f2;
 
@@ -893,9 +893,9 @@ void calc_data_norm(double **data, sachdr *hd_synth, int nsac, double *data_norm
 /*        vm      : pointer on moment tensor elements        */
 /* Output: data   : array data samples                       */
 /*         d      : array of predicted data samples          */
-/*         opt    : structopt containing output filenames    */
+/*         opt    : struct_opt containing output filenames    */
 void calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm, 
-                  double **data, double ***d, structopt *opt, FILE *o_log)
+                  double **data, double ***d, struct_opt *opt, FILE *o_log)
 {
     int  i, j, k, s, N = 0    ;
     char *fZ, *fN, *fE, *f1, *f2, *file ;
@@ -994,7 +994,7 @@ void calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
     }
 }
 
-void write_cmtf(char *filename, str_quake_params *eq, double *vm)
+void write_cmtf(char *filename, struct_quake_params *eq, double *vm)
 {
     int   i ;
     char  Mcmp[6][4] = {"Mrr","Mtt","Mpp","Mrt","Mrp","Mtp"} ;
@@ -1015,7 +1015,7 @@ void write_cmtf(char *filename, str_quake_params *eq, double *vm)
 }
 
 
-void comp_GtG(int M,int nsac, sachdr *hd_synt, double ***G, double **GtG, structopt *opt)
+void comp_GtG(int M,int nsac, sachdr *hd_synt, double ***G, double **GtG, struct_opt *opt)
 {
     int i, j, k, s, N;
 
@@ -1059,7 +1059,7 @@ void comp_GtG(int M,int nsac, sachdr *hd_synt, double ***G, double **GtG, struct
 
 
 void inversion(int M, sachdr *hd_synt, double ***G, double **d, 
-               structopt *opt, FILE *o_log, str_quake_params *eq)
+               struct_opt *opt, FILE *o_log, struct_quake_params *eq)
 {
     int    i, j ,k, l, s, nk, nrot, N  ;
     double **GtG, *eigvals, **eigvects, **cov ;
@@ -1234,8 +1234,8 @@ void sdr2mt(double *vm,double Mo,double strike,double dip,double rake)
 
 /* Warning: This routine has not been fully tested */
 void inversion_dc(sachdr *hd_synt, double ***G, double **d,
-			 double *sdrM0, structopt *opt, FILE *o_log, 
-       str_quake_params *eq)
+			 double *sdrM0, struct_opt *opt, FILE *o_log, 
+       struct_quake_params *eq)
 {
     int    i, j, k, l, npts, ref_flag ;
     int ip,ib[4],mp,mv,idvt,icon,iquit,iprnt;
@@ -1515,7 +1515,7 @@ void get_planes(double *vm, double **TM, double *eval3, double *s1,double *d1,do
     free((void**)evec3) ;
 }
 
-void set_wgt(int ns, sachdr *hd_data,structopt *opt) 
+void set_wgt(int ns, sachdr *hd_data,struct_opt *opt) 
 {  
     if (hd_data->kcmpnm[2] == 'Z')
        opt->wgt[ns] *= opt->wZ;
@@ -1594,7 +1594,7 @@ void free_G(double ***G)
 
 int fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts, 
        double Ptt, double twp_beg, double twp_end, double *buffer, double *G, 
-       structopt *opt, FILE *o_log)
+       struct_opt *opt, FILE *o_log)
 {
     int i, ierror = 1 ;
     int n1_GF, n2_GF  ;
@@ -1665,7 +1665,7 @@ int fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int np
 
 
 void set_matrices (char ***sacfiles,sachdr **hd_synt,double ***data, 
-                   double ****G,structopt *opt,str_quake_params *eq,FILE *o_log) 
+                   double ****G,struct_opt *opt,struct_quake_params *eq,FILE *o_log) 
 {
     int    i, j, flag, flag2,ierror, npts  ;
     int    n1_data, n2_data  ;
@@ -1865,7 +1865,7 @@ void set_matrices (char ***sacfiles,sachdr **hd_synt,double ***data,
 // n1_GF = (int)((t0 + twp_beg - (double)hd_GF.b - opt->dts_val)  / ((double)hd_GF.delta)) - 1 ; /* Error **** first GF Sample    */
 
 
-void screen_rms(int *nsac, char **data_name, double **data, double ***G, sachdr *hd_synt, structopt *opt, FILE *o_log)
+void screen_rms(int *nsac, char **data_name, double **data, double ***G, sachdr *hd_synt, struct_opt *opt, FILE *o_log)
 {
     int j, newn;
 
@@ -1901,7 +1901,7 @@ void screen_rms(int *nsac, char **data_name, double **data, double ***G, sachdr 
 }
 
 void screen_ratio(int *nsac,char **data_name,double **data,double ***G,sachdr *hd_synt, 
-                         structopt *opt, FILE *o_log)
+                         struct_opt *opt, FILE *o_log)
 {
     int j, newn ;
 
@@ -1937,7 +1937,7 @@ void screen_ratio(int *nsac,char **data_name,double **data,double ***G,sachdr *h
 
 
 void screen_med(int *nsac, char **data_name, double **data, double ***G, 
-                   sachdr *hd_synt, structopt *opt, FILE *o_log)
+                   sachdr *hd_synt, struct_opt *opt, FILE *o_log)
 {
     int    j, newn ;
     double min, max, val ;
@@ -1986,7 +1986,7 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
 }
 
 
-void median(int nsac, structopt *opt)
+void median(int nsac, struct_opt *opt)
 {
     int    i    ;
     double *tmp ;
@@ -2021,7 +2021,7 @@ void sort(double *tab,int ns)
 }
 
 
-void w_log_header(char **argv,structopt *opt,str_quake_params *eq,double *wp_win4,FILE *o_log) 
+void w_log_header(char **argv,struct_opt *opt,struct_quake_params *eq,double *wp_win4,FILE *o_log) 
 {
     int    i ;
     time_t t ;
@@ -2050,7 +2050,7 @@ void w_log_header(char **argv,structopt *opt,str_quake_params *eq,double *wp_win
 }
 
 
-void load_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,
+void load_kernel(struct_quake_params *eq,struct_opt *opt,sachdr *hd_synth,int nsac,
                         int nd,double *dv,double *tv, double ***G,FILE *o_log)
 {
     int    i, j, flag, ierror ;
@@ -2123,8 +2123,8 @@ void realloc_gridsearch(int nsac, double **rms, double *global_rms,
 
 
 void fast_ts_gridsearch(int M,int nd,double *dv,double *tv,sachdr *hd_synt,double **data, 
-				   double ***G,double ***dcalc,double **rms,structopt *opt,
-				   str_quake_params *eq,double *tsopt,double *rmsopt, FILE *o_log)
+				   double ***G,double ***dcalc,double **rms,struct_opt *opt,
+				   struct_quake_params *eq,double *tsopt,double *rmsopt, FILE *o_log)
 {
     int    i,it, k, Nexp, ref_flag;
     double Err,dt,ts,dtmin,dtmax,rmsini,tsopt2,rmsopt2,sdrM0[4]; 
@@ -2231,12 +2231,12 @@ void fast_ts_gridsearch(int M,int nd,double *dv,double *tv,sachdr *hd_synt,doubl
 
 
 void run_ts_gs(double *ts,int Ngrid, int M, int nd, double *dv,
-                  double *tv, sachdr *hd_synt, double **data, str_quake_params *eq,
-                  structopt *opt, double **vrms,int verbose)
+                  double *tv, sachdr *hd_synt, double **data, struct_quake_params *eq,
+                  struct_opt *opt, double **vrms,int verbose)
 {
     int i,j;
     double ***dcalc,**rms,*sdrM0,***G=NULL ;
-    str_quake_params eq_gs ;  
+    struct_quake_params eq_gs ;  
     #ifdef _OPENMP      
     int rang,ntaches;
     rang = omp_get_thread_num();
@@ -2314,7 +2314,7 @@ void run_ts_gs(double *ts,int Ngrid, int M, int nd, double *dv,
 }
 
 void ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_synt,double **data, 
-                          double *rmsini,structopt *opt,str_quake_params *eq,double *tsopt,
+                          double *rmsini,struct_opt *opt,struct_quake_params *eq,double *tsopt,
                           double *rmsopt, FILE *o_log)
 {
     int    i=0,j=0,k=0,it=0,Nexp=0,ref_flag,Ngrid,MaxNgrid;
@@ -2480,7 +2480,7 @@ void set_coor(double lat, double lon,double dep,int *Ngrid,double **coords)
 }
 
 
-void fill_grid(structopt *opt, double *LL, double dep, int *Ngrid, double **new_loc)
+void fill_grid(struct_opt *opt, double *LL, double dep, int *Ngrid, double **new_loc)
 {
     int i,j;
     for(i=0;i<opt->xy_Nx*2+1;i++)
@@ -2502,7 +2502,7 @@ void fill_arround(double *loc,double dlat,double dlon,double dep,int *Ngrid,doub
 }
 
 
-void copy_eq(str_quake_params *i_eq, str_quake_params *o_eq)
+void copy_eq(struct_quake_params *i_eq, struct_quake_params *o_eq)
 {
     strcpy(o_eq->evnm,i_eq->evnm)       ;
     strcpy(o_eq->cmtfile,i_eq->cmtfile) ;
@@ -2541,7 +2541,7 @@ void copy_eq(str_quake_params *i_eq, str_quake_params *o_eq)
 }
 
 
-void copy_opt(structopt *i_opt, structopt *o_opt,int nsac)
+void copy_opt(struct_opt *i_opt, struct_opt *o_opt,int nsac)
 {
     o_opt->ts_Nit   = i_opt->ts_Nit   ;
     o_opt->ps       = i_opt->ps       ;
@@ -2601,7 +2601,7 @@ void copy_opt(structopt *i_opt, structopt *o_opt,int nsac)
 
 
 void extend_xy_gs(double **old_loc,int Nold_loc,double *gfdep,int ngfdep,double **opt_loc,
-                         structopt *opt,str_quake_params *eq,int it,int Nexp,double *LL,double *UR,
+                         struct_opt *opt,struct_quake_params *eq,int it,int Nexp,double *LL,double *UR,
                          int *IZ, double **new_loc,int *Nnew_loc)
 {
     int i,j,k,l,Next=0,flag ;
@@ -2693,13 +2693,13 @@ void extend_xy_gs(double **old_loc,int Nold_loc,double *gfdep,int ngfdep,double 
 
 
 void run_xy_gs(double **coords,int Ngrid,int M,int nd,double *dv,
-               double *tv,sachdr *hd_synt,double **data,str_quake_params *eq,
-               structopt *opt,double **vrms,double **vms,int verbose)
+               double *tv,sachdr *hd_synt,double **data,struct_quake_params *eq,
+               struct_opt *opt,double **vrms,double **vms,int verbose)
 {
     int i,j;
     double ***dcalc,**rms,*sdrM0,***G=NULL ;
-    structopt opt_gs       ;
-    str_quake_params eq_gs ;  
+    struct_opt opt_gs       ;
+    struct_quake_params eq_gs ;  
     #ifdef _OPENMP      
     int rang,ntaches;
     rang = omp_get_thread_num();
@@ -2792,7 +2792,7 @@ void run_xy_gs(double **coords,int Ngrid,int M,int nd,double *dv,
 }
 
 void xy_gridsearch(int M, int nd,double *dv,double *tv, sachdr *hd_synt, double **data,double ***G,
-                   double ***dcalc,double **rms, structopt *opt,str_quake_params *eq,double *rmsopt,
+                   double ***dcalc,double **rms, struct_opt *opt,struct_quake_params *eq,double *rmsopt,
                    double *latopt,double *lonopt, double *depopt,FILE *o_log)
 {
     int i,j,k,it=0,ncel=0,Nexp=0,MaxNexp=5,Ngrid,Ngridini,MaxNgrid,flag=0,ref_flag;
@@ -2998,7 +2998,7 @@ void xy_gridsearch(int M, int nd,double *dv,double *tv, sachdr *hd_synt, double 
 
 
 void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char ***sacfiles,sachdr **hd_synt,
-                                str_quake_params *eq,structopt *opt,FILE *o_log)
+                                struct_quake_params *eq,struct_opt *opt,FILE *o_log)
 {
     int i,j,ns,n1_data,n2_data,npts,ierror=1;
     double *tmparray    ;
@@ -3191,7 +3191,7 @@ void make_chan_list(sachdr *hd_synth,int nsac, float **stlats,float **stlons)
 
 
 int fill_kernel_G(sachdr *hd_GF, sachdr *hd_data, double Ptt, double twp_beg, 
-                          double twp_end, double *elem_disp, double *G, structopt *opt, 
+                          double twp_end, double *elem_disp, double *G, struct_opt *opt, 
                           FILE *o_log)
 {
     int i, npts   ;
@@ -3257,7 +3257,7 @@ int fill_kernel_G(sachdr *hd_GF, sachdr *hd_data, double Ptt, double twp_beg,
 /***************************************************/
 /*           Set the kernel matrix G               */
 /***************************************************/
-void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,char *itype,
+void calc_kernel(struct_quake_params *eq,struct_opt *opt,sachdr *hd_synth,char *itype,
                         int nd,double *dv,double *tv, double ***G,FILE *o_log)
 {
     int   i,j,ns,jsac,nsects,flag,flag2,ngfcomp=6,ierror=1 ;

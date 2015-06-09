@@ -54,7 +54,7 @@ void summ_up_only_Z_sub(double *M2_cmt, char *segm1, char *segm2, double **GFs,
 void summ_up_only_Hs_sub(double *M2_cmt, char *segm1, char *segm2, double **GFs, 
                          double *T, double *P, sachdr *hdr);
 
-void fast_synth_only_Hs_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, str_quake_params *eq, sachdr *hdr, double **GFs, double *TH, double *PH);
+void fast_synth_only_Hs_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, struct_quake_params *eq, sachdr *hdr, double **GFs, double *TH, double *PH);
 
 /**************************************************************/
 /* Computing synthetic seismograms for a given moment tensor  */
@@ -69,7 +69,7 @@ void fast_synth_only_Hs_sub(double az, double baz, double xdeg, double *tv, doub
 /*                                                            */
 /* Output params : - hdr  = synthetic SAC header information  */
 /*                 - Z,TH,PH,E,N : synthetics                 */
-void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, str_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH)
+void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, struct_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH)
 {
     int i, ierror = 1 ;
     char   segm1[FSIZE], segm2[FSIZE] ;
@@ -107,7 +107,7 @@ void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, 
 }
 
 
-void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, str_quake_params *eq, sachdr *hdr, double **GFs, double *Z)
+void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, struct_quake_params *eq, sachdr *hdr, double **GFs, double *Z)
 {
     int i, ierror=1 ;
     char   segm1[FSIZE], segm2[FSIZE] ;
@@ -141,7 +141,7 @@ void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, doubl
     hdr->nzjday = yyyymmdd2jjj(hdr->nzyear, eq->ot_mo, eq->ot_dm);
 }
 
-void fast_synth_only_Hs_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, str_quake_params *eq, sachdr *hdr, double **GFs, double *TH, double *PH)
+void fast_synth_only_Hs_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, struct_quake_params *eq, sachdr *hdr, double **GFs, double *TH, double *PH)
 {
     int i, ierror=1 ;
     char   segm1[FSIZE], segm2[FSIZE] ;

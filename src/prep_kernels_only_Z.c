@@ -55,12 +55,12 @@ void rotate_traces(double *T, double *P, float baz, int npts, double *N, double 
 void save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan, 
                  float *lat, float *lon, sachdr *hdr,  double*   depval);
 void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd,
-                           str_quake_params *eq,sachdr *hdr, double **GFs, double *Z) ;
+                           struct_quake_params *eq,sachdr *hdr, double **GFs, double *Z) ;
 void crea_dir(const char *path);
 
 /* Internal routines */
 void get_params(int argc, char **argv, char *stat_file, char *itype, 
-                char *i_master, str_quake_params *eq, int *tapering);
+                char *i_master, struct_quake_params *eq, int *tapering);
 
 int main(int argc, char **argv)
 {
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     float *stlats,*stlons,*dists,*azs,*bazs,*xdegs ;
     double **GFs,*Z, *x_conv,*tv,*dv   ;
     double *b1,*b2,*a1,*a2,gain,dt=1.; 
-    str_quake_params eq; 
+    struct_quake_params eq; 
     sachdr   hdr; 
 
     /* Set input parameters */
@@ -292,7 +292,7 @@ void get_char_arg(argv, j, i, numarg2, str)
     free((void*)comp)     ;
 }
 
-void get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq, 
+void get_opt(int numarg1, int numarg2, char **argv, struct_quake_params *eq, 
              char *i_master,int *tapering)
 {
     int i,j,k;
@@ -335,7 +335,7 @@ void get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq,
 }
 
 void get_params(int argc, char **argv, char *stat_file, char *itype, 
-                char *i_master, str_quake_params *eq, int *tapering)
+                char *i_master, struct_quake_params *eq, int *tapering)
 {
     int  numarg1, numarg2, i, nimas;
     char **keys ;

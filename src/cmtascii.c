@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     double s1, d1, r1, s2, d2, r2, plg[3], azm[3] ;
     double *eval3, **evec3, M0, Mw, scale         ;
     char pdela[8], pdelo[9], cenla[8],cenlo[9]    ;
-    str_quake_params eq ;
+    struct_quake_params eq ;
 
     if (argc < 2)
     {

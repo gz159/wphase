@@ -58,7 +58,7 @@ void distaz(double    cmt_lat,  double    cmt_lon,  float*    stlats,  float*   
 
 /* Internal routines */
 void get_params(int argc, char **argv, int *un, char **i_sacs, char **o_sacs, 
-                str_quake_params *eq) ;
+                struct_quake_params *eq) ;
 void date2epoch(int year, int mm, int dd, int hour, int min, int sec, int msec, double *epoch);
 void delta_t(int y1, int j1, int h1, int m1, int s1, int ms1,
              int y0, int j0, int h0, int m0, int s0, int ms0, double *tdiff) ;
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     double *x_in, *x_out, *dv, *tv    ;
     char   *i_sacs, *fil,*o_sacs      ;
     FILE   *i_sacf, *o_sacf   ;
-    str_quake_params   eq     ;
+    struct_quake_params   eq     ;
     sachdr hdr                ;
     struct tree   *root, *mod ;
   
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
 
 
 void get_params(int argc, char **argv, int *un, char **i_sacs, char **o_sacs, 
-           str_quake_params *eq)
+           struct_quake_params *eq)
 {
     int  i              ;
     char **keys, *i_tmp ;

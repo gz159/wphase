@@ -51,9 +51,9 @@
 void jacobi(double **a,int n, int np, double *d, double **v, int *nrot) ;
 void eigsrt(double *d, double **v, int n) ;
 
-void get_opt(int numarg1, int numarg2, char **argv, structopt *opt, str_quake_params *eq) ;
-void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq);
-void get_param2(char *file, structopt *opt, str_quake_params *eq) ;
+void get_opt(int numarg1, int numarg2, char **argv, struct_opt *opt, struct_quake_params *eq) ;
+void get_param1(int argc, char **argv, int *M, struct_opt *opt, struct_quake_params *eq);
+void get_param2(char *file, struct_opt *opt, struct_quake_params *eq) ;
 
 
 int main(int argc, char *argv[])
@@ -65,9 +65,9 @@ int main(int argc, char *argv[])
     double sdrM0[4];
     char **sacfiles ;
     FILE *o_log  ;
-    structopt opt       ;
+    struct_opt opt       ;
     sachdr    *hd_synt  ;
-    str_quake_params eq ;   
+    struct_quake_params eq ;   
  
     /* Allocate memory for input parameters */
     eq.wp_win4  = double_alloc(4) ;
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
 }
 
 
-void get_param2(char *file, structopt *opt, str_quake_params *eq)
+void get_param2(char *file, struct_opt *opt, struct_quake_params *eq)
 {
     int  i=0, nimas;
     char **keys;
@@ -230,7 +230,7 @@ void dispsynt(char **argv)
 }
 
 
-void disphelp(char **argv,structopt *opt)
+void disphelp(char **argv,struct_opt *opt)
 {
     fprintf(stderr,"WPHASE INVERSION \n\n");
     dispsynt(argv);  
@@ -383,8 +383,8 @@ void get_num_arg3(argv, j, i, numarg2, value1, value2, value3)
 void get_opt(numarg1, numarg2, argv, opt, eq)
     int   numarg1, numarg2; 
     char  **argv;
-    str_quake_params *eq;
-    structopt *opt; 
+    struct_quake_params *eq;
+    struct_opt *opt; 
 {
     int i, j, k;
 
@@ -628,7 +628,7 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
     add_slash(opt->osacdir) ;
 }
 
-void get_param1(int argc, char **argv, int *M, structopt *opt, str_quake_params *eq) 
+void get_param1(int argc, char **argv, int *M, struct_opt *opt, struct_quake_params *eq) 
 {
     int numarg1, numarg2 ;
     int max = 128 ;

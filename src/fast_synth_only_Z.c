@@ -54,7 +54,7 @@ void distaz(double cmt_lat, double cmt_lon, float* stlats, float* stlons,
 void save_sac(char *stnm, char *netwk, char *chan, float *lat, float *lon, 
               sachdr *hdr,  double*   depval);
 
-void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, str_quake_params *eq,sachdr *hdr, double **GFs, double *Z) ;
+void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, struct_quake_params *eq,sachdr *hdr, double **GFs, double *Z) ;
 
 int main(int argc, char **argv)
 {
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     /* CMT variables */
     char   stat_file[FSIZE] ; 
     double *M1_cmt, *M2_cmt ; 
-    str_quake_params eq     ;  
+    struct_quake_params eq     ;  
     /* Stations variables */
     char  **stats, **nets             ;
     float *stlats,*stlons             ;

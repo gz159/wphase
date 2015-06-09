@@ -68,7 +68,7 @@ void add_slash(char *c)
 /*                      loaded from cmtfile by this routine if flag=2 */
 int get_cmtf(eq, flag)
     int   flag            ;
-    str_quake_params *eq  ; 
+    struct_quake_params *eq  ; 
 {
     int    nl,nb,nb2,tmp1 ;
     char   *line          ;
@@ -340,7 +340,7 @@ void decode_wp_win(buffer, wp_win4)
 void get_i_master(file, keys, n, eq)
     int  n ;
     char *file, **keys  ; 
-    str_quake_params *eq ;
+    struct_quake_params *eq ;
 {
     int  i, nb, nb2, tmp, nl;
     char *line,*buf;

@@ -49,7 +49,7 @@ typedef struct
   double *global_rms ;
   double Cond ;
   int nsac, nsini ;
-} str_quake_params ;
+} struct_quake_params ;
 
 
 
@@ -75,7 +75,7 @@ void add_slash(char *c);
 /*                      by inverting Wphase.                          */
 /*          > eq->vm[1] moment tensor elements of the reference sol.  */
 /*                      loaded from cmtfile by this routine if flag=2 */
-int get_cmtf(str_quake_params *eq, int flag) ;
+int get_cmtf(struct_quake_params *eq, int flag) ;
 
 
 /************************************************/
@@ -88,6 +88,6 @@ int get_cmtf(str_quake_params *eq, int flag) ;
 /*         >nb of keywords                      */
 /*                                              */
 /* Output : eq : parameters in a structure      */
-void get_i_master(char *file, char **keys, int n, str_quake_params *eq) ;
+void get_i_master(char *file, char **keys, int n, struct_quake_params *eq) ;
 void decode_wp_win(char *buffer, double *wp_win4);
 void wp_time_window(double gcarc, double *wp_win4, double *twp_beg, double *twp_end) ;

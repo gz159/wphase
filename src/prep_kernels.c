@@ -54,10 +54,10 @@ void distaz(double cmt_lat, double cmt_lon, float* stlats, float* stlons,
             long int* nerr);  
 void rotate_traces(double *T, double *P, float baz, int npts, double *H);
 void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv,
-                           int nd, str_quake_params *eq, sachdr *hdr, double **GFs,
+                           int nd, struct_quake_params *eq, sachdr *hdr, double **GFs,
                            double *Z);
 void fast_synth_only_Hs_sub(double az, double baz, double xdeg, double *tv, double *dv,
-                            int nd, str_quake_params *eq, sachdr *hdr, double **GFs,
+                            int nd, struct_quake_params *eq, sachdr *hdr, double **GFs,
                             double *TH,double *PH );
 void crea_dir(const char *path);
 void conv_by_stf(double delay, double half_width, char *itype,sachdr *hdr, 
@@ -65,7 +65,7 @@ void conv_by_stf(double delay, double half_width, char *itype,sachdr *hdr,
 
 /* Internal routines */
 void get_params(int argc, char **argv, char *stat_file, char *itype, 
-                char *i_master, str_quake_params *eq, int *tapering);
+                char *i_master, struct_quake_params *eq, int *tapering);
 void save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan, char* loc, 
                  float *lat, float *lon, sachdr *hdr,  double*   depval);
 
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     float *stlats,*stlons,*dists,*cmpazs, *azs,*bazs,*xdegs ;
     double **GFs,*S,*TH,*PH,*x_conv,*tv,*dv  ;
     double *b1,*b2,*a1,*a2,gain,dt=1.; 
-    str_quake_params eq; 
+    struct_quake_params eq; 
     sachdr hdr; 
 
     /* Set input parameters */
@@ -337,7 +337,7 @@ void get_char_arg(argv, j, i, numarg2, str)
     free((void*)comp)     ;
 }
 
-void get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq, 
+void get_opt(int numarg1, int numarg2, char **argv, struct_quake_params *eq, 
              char *i_master,int *tapering)
 {
     int i,j,k;
@@ -386,7 +386,7 @@ void get_opt(int numarg1, int numarg2, char **argv, str_quake_params *eq,
 }
 
 void get_params(int argc, char **argv, char *stat_file, char *itype, 
-                char *i_master, str_quake_params *eq, int *tapering)
+                char *i_master, struct_quake_params *eq, int *tapering)
 {
     int  numarg1, numarg2, i, nimas;
     char **keys ;

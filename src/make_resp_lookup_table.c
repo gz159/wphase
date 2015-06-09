@@ -45,7 +45,7 @@ void plzr2resp(char *pzfilename , double tolerance, double fl, double fh, int nf
 void lsqenp_ (int *nf, int *mp, int *mv, float *yl, float *x, float *b, int *ip, int *ib, int *idvt, int *icon, int *iquit, int *iprnt) ;
 
 void pzfile2id(char *pzfile, char *id, int *ierror) ;
-void get_params(char *file, str_quake_params *eq)   ;
+void get_params(char *file, struct_quake_params *eq)   ;
 
 int main(int argc, char *argv[])
 {
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     char   *net, *stat, *locid, *chan, *id, *line          ;
     char   *pzfilename, *pzfilelist,*outputfile, *irecfile ; 
     FILE   *pzlist, *out ;
-    str_quake_params eq  ;
+    struct_quake_params eq  ;
 
     /* Allocates memory */
     line = char_alloc(FSIZE) ;
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
     return 1 ;
 }
 
-void get_params(char *file, str_quake_params *eq) 
+void get_params(char *file, struct_quake_params *eq) 
 {
     int i=0     ;
     char **keys ;

@@ -45,13 +45,13 @@
 #include "wpinversion.h"
 
 //void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
-//                  str_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);
+//                  struct_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);
 //void rotate_traces(double *T, double *P, float baz, int npts, double *N, double *E);
 
 void distaz(double cmt_lat, double cmt_lon, float* stlats, float* stlons, 
             int nstat, float* dists, float* azs, float* bazs, float* xdegs,
             long int* nerr);  
-void get_params(char *file, str_quake_params *eq)      ;
+void get_params(char *file, struct_quake_params *eq)      ;
 
 int main(int argc, char *argv[])
 {
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     char o_dir[FSIZE], *o_file,stnm[9],netwk[9],cmpnm[9], khole[9];
     char stacmp[]={'Z','N','E','1','2'}  ;
     char itype[2]="l", ori;
-    str_quake_params eq ;
+    struct_quake_params eq ;
     sachdr hd_data, hd_synt ; 
     FILE *i_wp ;
 
@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
 /*           get_params(file, eq)          */
 /************************************************/
 /*  > Read input file for recursive filtering   */
-void get_params(char *file, str_quake_params *eq)
+void get_params(char *file, struct_quake_params *eq)
 {
     int  i     ;
     char **keys ;

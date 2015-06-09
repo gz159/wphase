@@ -55,7 +55,7 @@ void rotate_2_ortho_traces(double *T, double *P, float baz, int npts, double *N,
 void save_sac(char *stnm, char *netwk, char *chan, float *lat, float *lon, 
               sachdr *hdr,  double*   depval);
 
-void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, str_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);
+void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, struct_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);
 
 
 
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     /* CMT variables */
     char   stat_file[FSIZE] ; 
     double *M1_cmt, *M2_cmt ; 
-    str_quake_params eq     ;  
+    struct_quake_params eq     ;  
     /* Stations variables */
     char  **stats, **nets             ;
     float *stlats,*stlons             ;
