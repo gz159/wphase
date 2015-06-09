@@ -53,8 +53,6 @@ void distaz(double cmt_lat, double cmt_lon, float* stlats, float* stlons,
             int nstat, float* dists, float* azs, float* bazs, float* xdegs,
             long int* nerr);  
 void rotate_traces(double *T, double *P, float baz, int npts, double *H);
-void save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan, char* loc, 
-                 float *lat, float *lon, sachdr *hdr,  double*   depval);
 void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv,
                            int nd, str_quake_params *eq, sachdr *hdr, double **GFs,
                            double *Z);
@@ -68,6 +66,8 @@ void conv_by_stf(double delay, double half_width, char *itype,sachdr *hdr,
 /* Internal routines */
 void get_params(int argc, char **argv, char *stat_file, char *itype, 
                 char *i_master, str_quake_params *eq, int *tapering);
+void save_gf_sac(char *sac_filename, char *stnm, char *netwk, char *chan, char* loc, 
+                 float *lat, float *lon, sachdr *hdr,  double*   depval);
 
 
 int main(int argc, char **argv)
