@@ -30,9 +30,9 @@
 
 
 # Compilers
-CC      =  gcc          # C compiler
-FC	    =  gfortran     # fortran compiler
-			    #
+CC =  gcc          # C compiler
+FC =  gfortran     # fortran compiler
+		   #
 # Some parameters
 datalen     = 5000  # max. nb of samples
 fnamelen    = 128   # max. nb of chars in file names

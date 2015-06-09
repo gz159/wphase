@@ -108,9 +108,7 @@ set FAST_SYNTH           = \$BIN/fast_synth
 set FAST_SYNTH_ROT       = \$BIN/fast_synth_rot
 
 set DELTA_T              = \$BIN/delta_t
-set READCMT              = \$BIN/readcmt
 set SYNTHS               = \$BIN/synth_v6
-set CONV_VBB             = \$BIN/conv_vbb
 
 set SACLST               = \$BIN/saclst
 set DECIMATE             = \$BIN/decim_one_sac_file_to_1sps
