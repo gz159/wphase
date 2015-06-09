@@ -44,8 +44,6 @@
 int  read_stats(char* file, char*** stats, char*** nets, float** stlats, 
                 float** stlons);
 
-void init_tapering(int nh, int nd, double h, double **dv, double **tv);
-
 void taper_syn(double *R, double *T, double *P, int *npts, float *dt, float *d, 
            double *tv, double *dv, int nd);
 
