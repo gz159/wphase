@@ -59,29 +59,32 @@ void save_trace(double *TH, sachdr hdr, char *file)
     fclose(fd);
 }
 
-void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1a, 
-                                double r1a, double s2a, double d2a, double r2a, double **TMa, 
-                                double *eval3a, double M0a, double M0_12a, double Mwa, 
-                                double *global_rms, double gap, double Cond, int nsac, 
-                                sachdr *hd_synt, FILE *o_log) 
+void output_products(structopt *opt, str_quake_params *eq, 
+                                sachdr *hd_synt, FILE *o_log, char **argv) 
 {
-    int    i,j,k,p,nb,nb2,size,*nbcmp  ;
+    int    i,j,k=0,p,nb,nb2,size,*nbcmp  ;
+    double M0a=0.,Mwa=0.,M0_12a=0.;
     double M0b=0.,Mwb=0.,M0_12b=0.,ma,mb,mc  ;
+    double s1a, d1a, r1a, s2a, d2a, r2a, gap, **TMa, *eval3a;
     double s1b,s2b,d1b,d2b,r1b,r2b,tmp,scale ;
     double diplow,**TMb,*eval3b    ;
+    int nbstations = 0;
     char   *buf,*buf2,**sta,**cmp  ;
     FILE   *ps,*o_bitmap           ;
 
     char   date_stmp[64] ;
     time_t now           ; 
 
-    nbcmp  = int_alloc(nsac) ;
+    nbcmp  = int_alloc(eq->nsac) ;
     buf    = char_alloc(9) ;
     buf2   = char_alloc(32) ;
-    sta    = char_calloc2(nsac, 9) ;
-    cmp    = char_calloc2(nsac,30) ;    
+    sta    = char_calloc2(eq->nsac, 9) ;
+    cmp    = char_calloc2(eq->nsac,30) ;    
     eval3b = NULL;
     TMb    = NULL;
+    eval3a = double_alloc(3);
+    TMa    = double_alloc2(3,3);
+  
 
     /* Reference solution */
     if (opt->ref_flag)
@@ -93,6 +96,19 @@ void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1
         Mwb = (log10(M0b) - 16.1) / 1.5 ;
         residual_moment(eq->vm, &ma, &mb, &mc) ;
     }
+
+    /* Set stike/dip/rake */
+    get_planes(eq->vm[0], TMa, eval3a, &s1a,&d1a,&r1a, &s2a,&d2a,&r2a);
+    write_cmtf(opt->o_cmtf, eq, eq->vm[0]);  
+
+    /* Set Moment and Magnitude (Harvard Definition) */
+    M0a     = ((fabs(eval3a[0]) + fabs(eval3a[2])) * (double)POW) / 2.; 
+    Mwa     = (log10(M0a) - 16.1) / 1.5;
+    diplow = d2a;
+    if (d1a < d2a) 
+        diplow = d1a;
+    M0_12a  = M0a * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD);
+    get_gap(hd_synt, eq->nsac, &gap);
 
     /* PS FILE */
     if (opt->ps)
@@ -181,27 +197,26 @@ void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1
         {
             if (opt->dc_flag)
                 fprintf(ps,"(WCMT - RMS: %9.5f mm (%6.3f),  Gap: %5.1f\\312) show\n",
-                                  1000.*global_rms[0], global_rms[0]/global_rms[1],gap);
+                                  1000.*eq->global_rms[0], eq->global_rms[0]/eq->global_rms[1],gap);
             else
                 fprintf(ps,"(WCMT - RMS: %9.5f mm (%6.3f),  Gap: %5.1f\\312,  C#%9.0f) show\n",
-                                  1000.*global_rms[0], global_rms[0]/global_rms[1],gap,Cond);
+                                  1000.*eq->global_rms[0], eq->global_rms[0]/eq->global_rms[1],gap,eq->Cond);
     
             fprintf(ps,"%15.6f %15.6f moveto\n", -0.4, -2.25) ;
-            fprintf(ps,"(RCMT - RMS : %9.5f mm (%6.3f)) show\n", 1000.*global_rms[2], global_rms[2]/global_rms[3]);  
+            fprintf(ps,"(RCMT - RMS : %9.5f mm (%6.3f)) show\n", 1000.*eq->global_rms[2], eq->global_rms[2]/eq->global_rms[3]);  
         }
         else
         {
-            fprintf(ps,"(RMS: %9.5f mm (%6.3f)) show\n",1000.*global_rms[0], global_rms[0]/global_rms[1]);
+            fprintf(ps,"(RMS: %9.5f mm (%6.3f)) show\n",1000.*eq->global_rms[0], eq->global_rms[0]/eq->global_rms[1]);
             fprintf(ps,"%15.6f %15.6f moveto\n", -0.4, -2.25) ;
             if (opt->dc_flag)
                   fprintf(ps,"(GAP: %5.1f\\312) show\n",gap);
             else
-                  fprintf(ps,"(GAP: %5.1f\\312,  C#%9.0f) show\n",gap,Cond);
+                  fprintf(ps,"(GAP: %5.1f\\312,  C#%9.0f) show\n",gap,eq->Cond);
         }
 
         /* used stations */
-        k = 0 ;
-        for(i=0; i<nsac; i++) /* Set list of channels per stations */
+        for(i=0; i<eq->nsac; i++) /* Set list of channels per stations */
         {
             nb  = nbchar(hd_synt[i].kstnm)  ;
             nb2 = nbchar(hd_synt[i].kcmpnm) ;      
@@ -230,7 +245,7 @@ void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1
     
         fprintf(ps,"/Courier-Bold findfont .1 scalefont setfont\n") ;
         fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.45)             ;
-        fprintf(ps,"(Used stations (%d, %d channels) : ) show\n",k,nsac ) ;
+        fprintf(ps,"(Used stations (%d, %d channels) : ) show\n",k,eq->nsac ) ;
         fprintf(ps,"/Courier      findfont .065 scalefont setfont")  ;
         
         j  = 0;
@@ -248,6 +263,7 @@ void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1
                 nb++; 
             }
         }
+        nbstations = k;
         fprintf(ps,") show\n")   ;
         
         fprintf(ps,"%15.6f %15.6f moveto\n", -1., -2.55-((double)nb)/12.) ;
@@ -347,13 +363,13 @@ void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1
     printf("Eigenvalues: %-12.5f %-12.5f %-12.5f\n", eval3a[0], eval3a[1], eval3a[2]) ;
     if (opt->dc_flag)
         printf("WCMT: RMS = %-9.5f mm (%-6.3f) Gap: %-6.1f deg\n",
-                     1000.*global_rms[0], global_rms[0]/global_rms[1],gap);
+                     1000.*eq->global_rms[0], eq->global_rms[0]/eq->global_rms[1],gap);
     else
         printf("WCMT: RMS = %-9.5f mm (%-6.3f) Gap: %-6.1f deg, C#: %-10.0f\n",
-                     1000.*global_rms[0], global_rms[0]/global_rms[1],gap,Cond);
+                     1000.*eq->global_rms[0], eq->global_rms[0]/eq->global_rms[1],gap,eq->Cond);
     if (opt->ref_flag) 
     { 
-        printf("RCMT: RMS = %-9.5f mm (%-6.3f)\n", 1000.*global_rms[2], global_rms[2]/global_rms[3])  ;      
+        printf("RCMT: RMS = %-9.5f mm (%-6.3f)\n", 1000.*eq->global_rms[2], eq->global_rms[2]/eq->global_rms[3])  ;      
         diplow = d2b ;
         if (d1b < d2b)
                   diplow = d1b ;
@@ -361,16 +377,16 @@ void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1
     }
     printf("Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",Mwa,M0a,M0_12a) ;
     
-    fprintf(o_log,"n_used_rec:         %-4d\n",nsac) ;
+    fprintf(o_log,"n_used_rec:         %-4d\n",eq->nsac) ;
     fprintf(o_log,"Gap:                %-7.1f\n",gap) ;
     fprintf(o_log,"WCMT: ") ;
     for(i =0 ; i<NM ; i++)
         fprintf(o_log,"%15.4e",eq->vm[0][i]);
-    fprintf(o_log,"\nCond_number:        %-10.0f\n",Cond) ; 
+    fprintf(o_log,"\nCond_number:        %-10.0f\n",eq->Cond) ; 
     fprintf(o_log,"W_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",
                     s1a,d1a,r1a,s2a,d2a,r2a) ;
     fprintf(o_log,"W_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3a[0], eval3a[1], eval3a[2]) ;
-    fprintf(o_log,"W_cmt_err:          %-12.8f %-12.8f\n", 1000.*global_rms[0], global_rms[0]/global_rms[1])    ;
+    fprintf(o_log,"W_cmt_err:          %-12.8f %-12.8f\n", 1000.*eq->global_rms[0], eq->global_rms[0]/eq->global_rms[1])    ;
     fprintf(o_log,"Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",Mwa,M0a,M0_12a) ;
 
     if (opt->ref_flag) 
@@ -379,7 +395,7 @@ void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1
         printf("ratio = %5.2f ;  epsilon = %6.3f\n",M0b/M0a,mc) ;
         fprintf(o_log,"R_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",s1b,d1b,r1b, s2b,d2b,r2b) ;
         fprintf(o_log,"R_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3b[0], eval3b[1], eval3b[2])           ;
-        fprintf(o_log,"R_cmt_err:          %-12.8f %-12.8f\n", 1000.*global_rms[2], global_rms[2]/global_rms[3])  ;
+        fprintf(o_log,"R_cmt_err:          %-12.8f %-12.8f\n", 1000.*eq->global_rms[2], eq->global_rms[2]/eq->global_rms[3])  ;
         fprintf(o_log,"Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b)                           ;
         fprintf(o_log,"ratio = %12.8f ;  epsilon = %12.8f\n",M0b/M0a,mc) ;
     }
@@ -402,27 +418,239 @@ void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1
         fclose(o_bitmap)                       ; 
     }
 
+
+    /* INI OUTPUT */
+    /* ************************* */
+
+    FILE * testfile = fopen("test.ini", "a");
+    if (opt->med_val ==1)
+        fprintf(testfile, "\n\n\n[wp_med]\n");
+    if (opt->th_val > 0.)
+        fprintf(testfile, "\n\n\n[wp_th%.2f]\n", opt->th_val);
+    if (opt->ts_Nit > 0.)
+        fprintf(testfile, "\n\n\n[wp_ts]\n");
+    if (opt->dz > 0.)
+        fprintf(testfile, "\n\n\n[wp_z]\n");
+    else if (opt->xy_Nit > 0.)
+        fprintf(testfile, "\n\n\n[wp_xy]\n");
+    fprintf(testfile, "code_version         = %-d\n", VERSION);
+
+    // COMMENTS
+    if (opt->ncom !=0)
+    {
+        fprintf(testfile, "\n;comments\n");
+        for(i=0;i<opt->ncom;i++)
+        {
+            fprintf(testfile, "Comment%d             = %-s\n", i, opt->comments[i]) ;
+        }
+    }
+    // CENTROID MOMENT TENSOR WCMT
+    fprintf(testfile, "\n;centroid_moment_tensor_WCMT\n");
+    fprintf(testfile, "Mrr                  = %+14.6e\n", eq->vm[0][0]*(double)POW);
+    fprintf(testfile, "Mtt                  = %+14.6e\n", eq->vm[0][1]*(double)POW);
+    fprintf(testfile, "Mpp                  = %+14.6e\n", eq->vm[0][2]*(double)POW);
+    fprintf(testfile, "Mrt                  = %+14.6e\n", eq->vm[0][3]*(double)POW);
+    fprintf(testfile, "Mrp                  = %+14.6e\n", eq->vm[0][4]*(double)POW);
+    fprintf(testfile, "Mtp                  = %+14.6e\n", eq->vm[0][5]*(double)POW);
+
+    fprintf(testfile, "EPI_agency           = %-s\n",    strndup(eq->pdeline, 5));
+    fprintf(testfile, "EPI_year             = %4d\n",    atoi(strndup(eq->pdeline + 5, 4)));
+    fprintf(testfile, "EPI_month            = %4d\n",    atoi(strndup(eq->pdeline + 10, 2)));
+    fprintf(testfile, "EPI_day              = %4d\n",    atoi(strndup(eq->pdeline + 13, 2)));
+    fprintf(testfile, "EPI_hour             = %4d\n",    atoi(strndup(eq->pdeline + 16, 2)));
+    fprintf(testfile, "EPI_minute           = %4d\n",    atoi(strndup(eq->pdeline + 19, 2)));
+    fprintf(testfile, "EPI_second           = %7.2f\n",  atof(strndup(eq->pdeline + 22, 5)));
+    fprintf(testfile, "EPI_latitude         = %+9.4f\n", atof(strndup(eq->pdeline + 28, 8)));
+    fprintf(testfile, "EPI_longitude        = %+9.4f\n", atof(strndup(eq->pdeline + 37, 9)));
+    fprintf(testfile, "EPI_depth            = %6.1f\n",  atof(strndup(eq->pdeline + 47, 5)));
+    fprintf(testfile, "EPI_M1               = %6.1f\n",  atof(strndup(eq->pdeline + 53, 3)));
+    fprintf(testfile, "EPI_M2               = %6.1f\n",  atof(strndup(eq->pdeline + 57, 3)));
+    fprintf(testfile, "EPI_region           = %-s\n",    strndup(eq->pdeline + 61, 20));
+
+    fprintf(testfile, "eventid              = %-s\n",    eq->evid);
+    fprintf(testfile, "time_shift           = %8.2f\n",  eq->ts);
+    fprintf(testfile, "half_duration        = %8.2f\n",  eq->hd);
+    fprintf(testfile, "latitude             = %8.2f\n",  eq->evla);
+    fprintf(testfile, "longitude            = %8.2f\n",  eq->evlo);
+    fprintf(testfile, "depth                = %8.2f\n",  eq->evdp);
+    fprintf(testfile, "WM0                  = %12.2e\n", M0a);
+    fprintf(testfile, "WMw                  = %7.2f\n",  Mwa);
+    //fprintf(testfile, "W_mom_12             = %-15.4e\n", M0_12a);
+
+
+    // BEST NODAL PLANES WCMT
+    if (opt->dc_flag)
+    {
+        fprintf(testfile, "DC_FLAG              = True\n");
+        fprintf(testfile, "\n;n");
+    }
+    else
+    {
+        fprintf(testfile, "DC_FLAG              = False\n");
+        fprintf(testfile, "\n;best_n");
+    }
+    fprintf(testfile, "odal planes_WCMT\n");
+    fprintf(testfile, "W_NP1_strike         = %7.1f\n", s1a);
+    fprintf(testfile, "W_NP1_dip            = %7.1f\n", d1a);
+    fprintf(testfile, "W_NP1_rake           = %7.1f\n", r1a);
+    fprintf(testfile, "W_NP2_strike         = %7.1f\n", s2a);
+    fprintf(testfile, "W_NP2_dip            = %7.1f\n", d2a);
+    fprintf(testfile, "W_NP2_rake           = %7.1f\n", r2a);
+
+    // EIGENVALUES WCMT
+    fprintf(testfile, "\n;eigenvalues_WCMT\n");
+    fprintf(testfile, "M_eig1               = %14.4f\n", eval3a[0]);
+    fprintf(testfile, "M_eig2               = %14.4f\n", eval3a[1]);
+    fprintf(testfile, "M_eig3               = %14.4f\n", eval3a[2]);
+
+    // CENTROID MOMENT TENSOR RCMT
+    fprintf(testfile, "\n;centroid_moment_tensor_RCMT\n");
+    if(opt->ref_flag)
+    {
+        fprintf(testfile, "R_eig1               = %14.4f\n", eval3b[0]);
+        fprintf(testfile, "R_eig2               = %14.4f\n", eval3b[1]);
+        fprintf(testfile, "R_eig3               = %14.4f\n", eval3b[2]);   
+        fprintf(testfile, "R_mag                = %5.2f\n",  Mwb);
+        fprintf(testfile, "R_mom                = %15.4e\n", M0b);
+        fprintf(testfile, "R_mom_12             = %15.4e\n", M0_12b);
+        fprintf(testfile, "ratio                = %5.2f\n",  M0b/M0a);
+        fprintf(testfile, "epsilon              = %6.3f\n",  mc);
+    }
+
+    // BEST NODAL PLANES RCMT
+    if (opt->ref_flag) 
+    {          
+        if (opt->dc_flag)
+            fprintf(testfile, "\n;n");
+        else
+            fprintf(testfile, "\n;best_n");
+        fprintf(testfile, "odal planes_RCMT\n");
+        fprintf(testfile, "R_NP1_strike         = %7.1f\n", s1b);
+        fprintf(testfile, "R_NP1_dip            = %7.1f\n", d1b);
+        fprintf(testfile, "R_NP1_rake           = %7.1f\n", r1b);
+        fprintf(testfile, "R_NP2_strike         = %7.1f\n", s2b);
+        fprintf(testfile, "R_NP2_dip            = %7.1f\n", d2b);
+        fprintf(testfile, "R_NP2_rake           = %7.1f\n", r2b);
+    }
+
+    // FILTER PARAMETERS
+    fprintf(testfile, "\n;filter_parameters\n");
+    fprintf(testfile, "filt_order           = %1d\n",   eq->filtorder);
+    fprintf(testfile, "filt_cf1             = %7.5f\n", eq->flow);
+    fprintf(testfile, "filt_cf2             = %7.5f\n", eq->fhigh);
+    fprintf(testfile, "filt_pass            = %1d\n",   eq->filtnpass);
+
+    // SCREENING PARAMETERS
+    fprintf(testfile, "\n;screening_parameters\n");
+    if (opt->med_val ==1)
+    {
+        fprintf(testfile, "med_val              = %15.8e\n",        opt->med_val);
+        fprintf(testfile, "p2p_med              = %15.8e\n",        opt->p2p_med);
+        fprintf(testfile, "p2p_min              = %15.8e\n", 0.1 * (opt->p2p_med));
+        fprintf(testfile, "p2p_max              = %15.8e\n", 3.0 * (opt->p2p_med));
+        fprintf(testfile, "average              = %15.8e\n",        opt->p2p_med/2); 
+    }
+    else
+        fprintf(testfile, "; (None)\n");
+
+    // USED DATA
+
+    /* concatenate all stations in one string */
+    int stat_size =0;
+    for(i=0; i<k; i++)
+    {
+        stat_size += strlen(sta[i]) + strlen(cmp[i]) + 3;
+    }
+    char *str_stations = malloc(stat_size + 1);
+    strcpy(str_stations, sta[0]);
+    strcat(str_stations, "(");
+    strcat(str_stations, cmp[0]);
+    strcat(str_stations, ") ");
+    for(i=1; i<k; i++)
+    {
+        strcat(str_stations, sta[i]);
+        strcat(str_stations, "(");
+        strcat(str_stations, cmp[i]);
+        strcat(str_stations, ") ");
+    }
+    /* end concatenation */
+
+    fprintf(testfile, "\n;used_data\n");
+    fprintf(testfile, "nb_stations          = %4d\n", nbstations);
+    fprintf(testfile, "nb_channels          = %4d\n", eq->nsac);
+    fprintf(testfile, "nb_rejected_channels = %4d\n", eq->nsini-eq->nsac);
+    fprintf(testfile, "stations             = %s\n", str_stations);
+    fprintf(testfile, "WPWIN                = %8.2f %8.2f %8.2f %8.2f\n", eq->wp_win4[0], eq->wp_win4[1], eq->wp_win4[2], eq->wp_win4[3]);
+    fprintf(testfile, "Dmin                 = %8.2f\n", opt->dmin);
+    fprintf(testfile, "Dmax                 = %8.2f\n", opt->dmax);
+    fprintf(testfile, "wN                   = %8.2f\n", opt->wN);
+    fprintf(testfile, "wE                   = %8.2f\n", opt->wE);
+    fprintf(testfile, "wZ                   = %8.2f\n", opt->wZ);
+
+    // INVERSION PARAMETERS
+    fprintf(testfile, "\n;inversion_parameters\n");
+    fprintf(testfile, "command_line         = %-s\n", argv[0]);
+    fprintf(testfile, "ref_solution         = %-s\n", eq->cmtfile);
+    fprintf(testfile, "cond_thre            = %8.3f\n", opt->cth_val);
+    fprintf(testfile, "damp_fac             = %8.3f\n", opt->df_val);
+    if (opt->th_val > 0)
+    {
+        fprintf(testfile, "rms_threshold        = %-f\n", opt->th_val);
+    }
+
+    // QUALITY CONTROL
+    fprintf(testfile, "\n;QC\n");
+    fprintf(testfile, "WRMS                 = %9.5f\n", 1000.*eq->global_rms[0]);
+    fprintf(testfile, "WRMS_r               = %6.3f\n", eq->global_rms[0]/eq->global_rms[1]);
+    fprintf(testfile, "Gap                  = %5.1f\n", gap);
+    if (opt->dc_flag == 0)
+        fprintf(testfile, "Cond_number          = ---\n");
+    else
+        fprintf(testfile, "Cond_number          = %10.1f\n", eq->Cond); 
+    if (opt->ref_flag) 
+    {
+        fprintf(testfile, "RRMS                 = %9.5f\n", 1000.*eq->global_rms[2]);
+        fprintf(testfile, "RRMS_r               = %9.5f\n", eq->global_rms[2]/eq->global_rms[3]); 
+    }
+    // concatenate all G_eigenvalues in a string
+/*
+    int G_eig_size = sizeof(eigvals);  
+    char *str_G_eig = malloc(G_eig_size + 1);
+    char *Gtemp = malloc(sizeof(eigvals[0]));
+    sprintf(str_G_eig, "%e  ", eigvals[0]);
+    for(i=1;i<nk;i++)
+    {
+        sprintf(Gtemp, "%e  ", eq->eigvals[i]);
+        strcat(str_G_eig, Gtemp);
+    }
+    // end concatenation
+    fprintf(testfile, "G_eigenvalues        = %s\n", *str_G_eig);
+*/
+
+
+    /* ************************* */
+    /* END INI OUTPUT */
+
     /* Memory Freeing */
     if (opt->ref_flag)
     {
         for(i=0 ; i<3 ; i++) 
-                  free((void*)TMb[i]) ;
+            free((void*)TMb[i]) ;
         free((void**)TMb)     ;
         free((void*)eval3b)   ;
     }
     free((void*)nbcmp)    ;
     free((void*)buf)      ;
     free((void*)buf2)     ;
-    for(i=0 ; i<nsac ; i++)
+    for(i=0 ; i<eq->nsac ; i++)
     {
         free((void*)sta[i]) ;
         free((void*)cmp[i]) ; 
     }
     free((void**)cmp)     ;
     free((void**)sta)     ;
+
 }
-
-
 
 /*******************************/
 /*       prad_pat(TM, ps)      */
@@ -484,7 +712,7 @@ void prad_pat(double **TM, FILE *ps)
 void pnod_pat(double *s, double *d, FILE *ps)
 {
     fprintf(ps,"newpath\n" )                ;
-    fprintf(ps, "/phi %6.1f def \n", (*s))     ;
+    fprintf(ps, "/phi %6.1f def\n", (*s))     ;
     fprintf(ps,"/delta %6.1f def\n", (*d))     ;
     fprintf(ps,"phi sin phi cos moveto\n")  ;
     fprintf(ps,"0 1 180\n")                 ;
@@ -593,22 +821,22 @@ void calc_stat(int npts, double *data, double *mi2ma, double *ave)
 /*         global_rms : overall rms amp. and rms deviations  */
 void calc_rms(int ns, sachdr *hd_synt, double **data, double ***dcalc, double **rms, double *global_rms, structopt *opt) 
 {
-    int i, j, n0, f2;
+  int    i, j, n0, f2;
 
-    f2  = 2*(opt->ref_flag+1);
-    n0 = 0 ;
-    for(i=0;i<ns;i++)
+  f2  = 2*(opt->ref_flag+1);
+  n0 = 0 ;
+  for(i=0;i<ns;i++)
     {
-        calc_rms_sub(hd_synt[i].npts, data[i], dcalc[i], rms[i],opt->ref_flag);
-        n0 += hd_synt[i].npts ;
-        for(j=0 ; j<f2 ; j++) 
-        {
-            global_rms[j] += rms[i][j] ;
-            rms[i][j] = sqrt(rms[i][j]/(double)hd_synt[i].npts); 
-        }
+      calc_rms_sub(hd_synt[i].npts, data[i], dcalc[i], rms[i],opt->ref_flag);
+      n0 += hd_synt[i].npts ;
+      for(j=0 ; j<f2 ; j++) 
+		{
+		  global_rms[j] += rms[i][j] ;
+		  rms[i][j] = sqrt(rms[i][j]/(double)hd_synt[i].npts); 
+		}
     }
-    for(j=0; j<f2; j++)
-        global_rms[j] = sqrt(global_rms[j]/n0) ;
+  for(j=0; j<f2; j++)
+    global_rms[j] = sqrt(global_rms[j]/n0) ;
 }
 
 
@@ -830,8 +1058,8 @@ void comp_GtG(int M,int nsac, sachdr *hd_synt, double ***G, double **GtG, struct
 }
 
 
-void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d, 
-                  double *vma, double *Cond, structopt *opt, FILE *o_log)
+void inversion(int M, sachdr *hd_synt, double ***G, double **d, 
+               structopt *opt, FILE *o_log, str_quake_params *eq)
 {
     int    i, j ,k, l, s, nk, nrot, N  ;
     double **GtG, *eigvals, **eigvects, **cov ;
@@ -844,14 +1072,14 @@ void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d,
     cov      = double_calloc2(M,M)  ;
     /* Azimuth ponderation */
     if (opt->azp > 0. && opt->dts_step <= 0. && opt->xy_dx <= 0.)
-        azpond(hd_synt,nsac,opt->wgt)    ;
+        azpond(hd_synt,eq->nsac,opt->wgt)    ;
     /* Weight normalization */
     opt->wgtnorm = 0.;
-    for(i=0;i<nsac;i++)
+    for(i=0;i<eq->nsac;i++)
        opt->wgtnorm += opt->wgt[i] ;
-    opt->wgtnorm /= (double)nsac ;  
+    opt->wgtnorm /= (double)eq->nsac ;  
     /* Constrains null trace (if M=5) and computes GtG */
-    comp_GtG(M,nsac,hd_synt,G,GtG,opt) ;
+    comp_GtG(M,eq->nsac,hd_synt,G,GtG,opt) ;
     /* Computes eigenvalues and eigenvectors */
     jacobi(GtG,M,M,eigvals,eigvects,&nrot);
     eigsrt(eigvals,eigvects,M) ;
@@ -859,12 +1087,14 @@ void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d,
     nk = M;
     if (opt->cth_val <= 0.) /* Remove the eigenvalues smaller than max(eigval)/10000 if any */
     {
-        *Cond = eigvals[0] / eigvals[nk-1] ;
-        if (*Cond > 1.e4)
+        eq->Cond = eigvals[0] / eigvals[nk-1] ;
+        if (eq->Cond > 1.e4)
                   for(i=1;i<nk;i++) 
-                    if(eigvals[i] < eigvals[0]/1.e4)  {
+                    if(eigvals[i] < eigvals[0]/1.e4)  
+                    {
                           nk = i ;
-                          break  ; }
+                          break  ; 
+                    }
     }
     else                   /* Damping factor applied to small eigenvalues */
     {
@@ -877,13 +1107,13 @@ void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d,
             for(i=1;i<=nk;i++)
                   eigvals[i] = eigvals[i] + eigvals[0]*(opt->df_val) ;
         }
-        *Cond = eigvals[0] / eigvals[nk-1] ;
+        eq->Cond = eigvals[0] / eigvals[nk-1] ;
     }  
     /* Display inversion details */
     if (o_log != NULL)
     {
         /*       o_cov    = openfile_wt("Gd") ; */
-        /*       for(i=0;i<nsac;i++) */
+        /*       for(i=0;i<eq->nsac;i++) */
         /*    for(k=0;k<hd_synt[i].npts;k++) */
         /*      { */
         /*        for(j=0;j<NM;j++) */
@@ -894,19 +1124,19 @@ void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d,
 
         if (opt->dts_step <= 0. && opt->xy_dx <= 0.)
         {
-            printf("##############\n%d significant eigenvalues: \n", nk) ;
+            printf("##############\n%d significant eigenvalues:\n", nk) ;
             for(i=0;i<nk;i++) 
                 printf("  %13.5e",eigvals[i]);
             printf("\n");
         }
-        fprintf(o_log,"Inversion: %d significant eigenvalues: \n", nk) ;  
+        fprintf(o_log,"Inversion: %d significant eigenvalues:\n", nk) ;  
         for(i=0;i<nk;i++) 
             fprintf(o_log,"%e\t",eigvals[i]) ;   
         fprintf(o_log,"\n") ;
         if(M-nk>0)
         {
-            printf(       "%d removed: \n",M-nk) ;
-            fprintf(o_log,"%d removed: \n",M-nk) ;
+            printf(       "%d removed:\n",M-nk) ;
+            fprintf(o_log,"%d removed:\n",M-nk) ;
             for (i=nk;i<M;i++) {
                   printf("  %13.5e",eigvals[i])    ;
                   fprintf(o_log,"%e\t",eigvals[i]) ;   }
@@ -934,33 +1164,33 @@ void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d,
       
     /* Least-squares inversion */
     for(i=0;i<NM;i++)  /* Initialize MT components */
-        vma[i] = 0. ;
+        eq->vm[0][i] = 0. ;
     if (M==NM-1)    /* Null trace     */
     {
-        for(s=0;s<nsac;s++)
+        for(s=0;s<eq->nsac;s++)
         {
             N = hd_synt[s].npts ;
             for(i=0;i<M;i++)
             {
                 for(k=0;k<2;k++)
                     for(l=0;l<N;l++)
-                        vma[i] += cov[i][k]*(G[s][k][l]-G[s][2][l])*d[s][l]*opt->wgt[s]/opt->wgtnorm ;
+                        eq->vm[0][i] += cov[i][k]*(G[s][k][l]-G[s][2][l])*d[s][l]*opt->wgt[s]/opt->wgtnorm ;
                 for(k=2;k<M;k++)
                     for(l=0;l<N;l++)
-                        vma[i] += cov[i][k]*G[s][k+1][l]*d[s][l]*opt->wgt[s]/opt->wgtnorm ;
+                        eq->vm[0][i] += cov[i][k]*G[s][k+1][l]*d[s][l]*opt->wgt[s]/opt->wgtnorm ;
             }
         }
-        vma[5] = vma[4] ;
-        vma[4] = vma[3] ;
-        vma[3] = vma[2] ;
-        vma[2] = -vma[0] -vma[1] ;
+        eq->vm[0][5] = eq->vm[0][4] ;
+        eq->vm[0][4] = eq->vm[0][3] ;
+        eq->vm[0][3] = eq->vm[0][2] ;
+        eq->vm[0][2] = -eq->vm[0][0] -eq->vm[0][1] ;
     }
     else if (M==NM) /* No constraints */
-        for(s=0;s<nsac;s++)
+        for(s=0;s<eq->nsac;s++)
             for(i=0;i<M;i++)
                 for(k=0;k<M;k++)
                     for(l=0 ; l<hd_synt[s].npts ; l++)
-                        vma[i] += cov[i][k]*G[s][k][l]*d[s][l]*opt->wgt[s]/opt->wgtnorm ;
+                        eq->vm[0][i] += cov[i][k]*G[s][k][l]*d[s][l]*opt->wgt[s]/opt->wgtnorm ;
     else 
     {
         fprintf(stderr,"ERROR : bad nb of parameters (M=%d)\n",M);
@@ -1003,8 +1233,9 @@ void sdr2mt(double *vm,double Mo,double strike,double dip,double rake)
 
 
 /* Warning: This routine has not been fully tested */
-void inversion_dc(int nsac, sachdr *hd_synt, double ***G, double **d,
-                         double *sdrM0,double *rmsopt, structopt *opt, FILE *o_log)
+void inversion_dc(sachdr *hd_synt, double ***G, double **d,
+			 double *sdrM0, structopt *opt, FILE *o_log, 
+       str_quake_params *eq)
 {
     int    i, j, k, l, npts, ref_flag ;
     int ip,ib[4],mp,mv,idvt,icon,iquit,iprnt;
@@ -1014,21 +1245,24 @@ void inversion_dc(int nsac, sachdr *hd_synt, double ***G, double **d,
     
     ip = opt->ip;
     for(i=0;i<ip;i++)
-       ib[i]=opt->ib[i];
+        ib[i]=opt->ib[i];
+
     /* Allocate memory */
     vm    = double_alloc2p(2) ;
     vm[0] = double_calloc(NM) ;
-    dcalc = double_alloc3p(nsac)   ;      
-    rms   = double_calloc2(nsac,2) ;
+    dcalc = double_alloc3p(eq->nsac)   ;      
+    rms   = double_calloc2(eq->nsac,2) ;
     global_rms = double_calloc(2)  ;
     npts = 0; /* # of samples */
-    for(i=0;i<nsac;i++)
-        npts += hd_synt[i].npts ;
+    for(i=0;i<eq->nsac;i++)
+	      npts += hd_synt[i].npts ;
     data = float_alloc(npts)    ;
     xlsq = float_alloc(NM*npts) ;
+
     /* Reference flag */
     ref_flag = opt->ref_flag ;
-    opt->ref_flag = 0        ;      
+    opt->ref_flag = 0        ;    
+  
     /* Set the lsq parameters */
     mp = 4;    /* no. of param            */
     mv = 1;    /* no. of indep. variables */
@@ -1036,77 +1270,87 @@ void inversion_dc(int nsac, sachdr *hd_synt, double ***G, double **d,
     icon  = 1; /* Omit nonlinear confidence limits calculation */
     iquit = 0; /* No force off         */
     iprnt = 0; /* abbreviated printout */
+
     /* A priori RMS value */
     /*   if (o_log != NULL) */
     /*     { */
     sdr2mt(*vm,sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2])   ;
-    calc_data(nsac,hd_synt,G,vm,d,dcalc,opt,NULL)     ;
-    calc_rms(nsac,hd_synt,d,dcalc,rms,global_rms,opt) ;       
+    calc_data(eq->nsac,hd_synt,G,vm,d,dcalc,opt,NULL)     ;
+    calc_rms(eq->nsac,hd_synt,d,dcalc,rms,global_rms,opt) ;       
     for(i=0;i<2;i++)   
-    {
-        rmsopt[i]=global_rms[i];
-        global_rms[i] = 0.;
-        for(j=0;j<nsac;j++)
-              rms[j][i] = 0.;
-    }
-    for(i=0;i<nsac;i++)
-    {
-        free((void*) dcalc[i][0]) ;
-        free((void**)dcalc[i])    ;
-    }
+	  {
+	      eq->global_rms[i]=global_rms[i];
+	      global_rms[i] = 0.;
+	      for(j=0;j<eq->nsac;j++)
+		    rms[j][i] = 0.;
+	  }
+    for(i=0;i<eq->nsac;i++)
+	  {
+	      free((void*) dcalc[i][0]) ;
+	      free((void**)dcalc[i])    ;
+	  }
     /*     } */
+
     /* Weight normalization */
     opt->wgtnorm = 0.;
-    for(i=0;i<nsac;i++)
-        opt->wgtnorm += opt->wgt[i] ;
-    opt->wgtnorm /= (double)nsac ;  
+    for(i=0;i<eq->nsac;i++)
+      opt->wgtnorm += opt->wgt[i] ;
+    opt->wgtnorm /= (double)eq->nsac ;  
+
     /* Populate data and wgt array */
     k = 0; 
-    for(i=0;i<nsac;i++)
-        for(j=0;j<hd_synt[i].npts;j++)
-            data[k++] = (float)(d[i][j]*sqrt(opt->wgt[i]/opt->wgtnorm));
+    for(i=0;i<eq->nsac;i++)
+      for(j=0;j<hd_synt[i].npts;j++)
+        data[k++] = (float)(d[i][j]*sqrt(opt->wgt[i]/opt->wgtnorm));
+
     /* Populate xlsq array  */
     l = 0;
     for(i=0;i<NM;i++)
-        for(j=0;j<nsac;j++)
-            for(k=0;k<hd_synt[j].npts;k++)
-                xlsq[l++] = (float)(G[j][i][k]*sqrt(opt->wgt[j]/opt->wgtnorm));
+      for(j=0;j<eq->nsac;j++)
+        for(k=0;k<hd_synt[j].npts;k++)
+		  xlsq[l++] = (float)(G[j][i][k]*sqrt(opt->wgt[j]/opt->wgtnorm));
+
     /* Populate model array */  
     for(i=0;i<4;i++)
-        b[i] = (float)sdrM0[i]; 
+      b[i] = (float)sdrM0[i]; 
+
     /* LSQENP         */
     if (o_log != NULL)
-    {
+      {
         printf("Double-Couple inversion:\n         Strike  Dip   Rake  M0(dyn.cm) RMS(mm)\n");
         printf("APRIORI: %6.2f %5.2f %6.2f %9.2e %8.5f\n",
-                           sdrM0[0],sdrM0[1],sdrM0[2],sdrM0[3]*POW,rmsopt[0]*1000) ;
+			   sdrM0[0],sdrM0[1],sdrM0[2],sdrM0[3]*POW,eq->global_rms[0]*1000) ;
         fprintf(o_log,"Double-Couple inversion:\n         Strike  Dip   Rake  M0(dyn.cm) RMS(mm)\n");
         fprintf(o_log,"APRIORI: %6.2f %5.2f %6.2f %9.2e %8.5f\n",
-                            sdrM0[0],sdrM0[1],sdrM0[2],sdrM0[3]*POW,rmsopt[0]*1000) ;      
-    }
+			    sdrM0[0],sdrM0[1],sdrM0[2],sdrM0[3]*POW,eq->global_rms[0]*1000) ;      
+      }
     lsqenp_ (&npts,&mp,&mv,data,xlsq,b,&ip,ib,&idvt,&icon,&iquit,&iprnt);
+
     /* Populate sdrM0 */
     for(i=0;i<4;i++)
-        sdrM0[i] = (double)b[i];
+      sdrM0[i] = (double)b[i];
+
     /* Calculate rms  */
     sdr2mt(*vm,sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2])   ;
-    calc_data(nsac,hd_synt,G,vm,d,dcalc,opt,NULL)     ;
-    calc_rms(nsac,hd_synt,d,dcalc,rms,global_rms,opt) ;   
+    calc_data(eq->nsac,hd_synt,G,vm,d,dcalc,opt,NULL)     ;
+    calc_rms(eq->nsac,hd_synt,d,dcalc,rms,global_rms,opt) ;   
     for(i=0;i<2;i++)    
-        rmsopt[i]=global_rms[i];
+        eq->global_rms[i]=global_rms[i];
     if (o_log != NULL)
     {
         printf("OPTIMUM: %6.2f %5.2f %6.2f %9.2e %8.5f\n",
-                           sdrM0[0],sdrM0[1],sdrM0[2],sdrM0[3]*POW,rmsopt[0]*1000) ;
+			   sdrM0[0],sdrM0[1],sdrM0[2],sdrM0[3]*POW,eq->global_rms[0]*1000) ;
         fprintf(o_log,"OPTIMUM: %6.2f %5.2f %6.2f %9.2e %8.5f\n",
-                            sdrM0[0],sdrM0[1],sdrM0[2],sdrM0[3]*POW,rmsopt[0]*1000) ;
+			    sdrM0[0],sdrM0[1],sdrM0[2],sdrM0[3]*POW,eq->global_rms[0]*1000) ;
     }
+
     /* Reference flag */
     opt->ref_flag = ref_flag ;
+
     /* Free memory */
     free((void*)data);
     free((void*)xlsq);
-    for(i=0 ; i<nsac ; i++)
+    for(i=0 ; i<eq->nsac ; i++)
     {
         free((void*) rms[i])      ;
         free((void*) dcalc[i][0]) ;
@@ -1118,6 +1362,7 @@ void inversion_dc(int nsac, sachdr *hd_synt, double ***G, double **d,
     free((void*)vm[0]) ;
     free((void**)vm  ) ;
 }
+
 
 
 
@@ -1175,8 +1420,7 @@ void set_mt(double *vm, double **TM)
     TM[2][1] = TM[1][2] ;
 }
   
-void get_planes(double *vm, double **TM, double *eval3, double *s1,double *d1,
-                   double *r1, double *s2,double *d2,double *r2)
+void get_planes(double *vm, double **TM, double *eval3, double *s1,double *d1,double *r1, double *s2,double *d2,double *r2)
 {
     int    nrot, i ;
     double si, co  ;
@@ -1420,8 +1664,8 @@ int fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int np
 /* hd_GF->b += (n1_GF-1)*hd_GF->delta ; */
 
 
-void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,double ***data, 
-                          double ****G,structopt *opt,str_quake_params *eq,FILE *o_log) 
+void set_matrices (char ***sacfiles,sachdr **hd_synt,double ***data, 
+                   double ****G,structopt *opt,str_quake_params *eq,FILE *o_log) 
 {
     int    i, j, flag, flag2,ierror, npts  ;
     int    n1_data, n2_data  ;
@@ -1438,8 +1682,8 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
 
 
     /* Opening data file list */
-    i_sac = openfile_rt(opt->i_saclst,nsini) ;
-    *nsac = *nsini ;
+    i_sac = openfile_rt(opt->i_saclst,&eq->nsini) ;
+    eq->nsac = eq->nsini ;
 
     /* Allocating memory */
     dum      = char_alloc(32)    ;
@@ -1456,15 +1700,15 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
          opt->rms_in == NULL && opt->p2p == NULL && opt->avg == NULL && \
          *sacfiles == NULL && opt->rms_r == NULL) 
     {
-        *data     = double_alloc2p( *nsac )  ;
-        *G        = double_alloc3p( *nsac )  ;
-        opt->wgt  = double_alloc( *nsac )    ;
-        *sacfiles = char_alloc2(*nsac,FSIZE) ;
-        opt->rms_in = double_alloc(*nsac)    ;
-        opt->rms_r  = double_alloc(*nsac)    ;
-        opt->p2p    = double_alloc(*nsac)    ;
-        opt->avg    = double_alloc(*nsac)    ;
-        hdr_tab(hd_synt, *nsac)              ; 
+        *data     = double_alloc2p( eq->nsac )  ;
+        *G        = double_alloc3p( eq->nsac )  ;
+        opt->wgt  = double_alloc( eq->nsac )    ;
+        *sacfiles = char_alloc2(eq->nsac,FSIZE) ;
+        opt->rms_in = double_alloc(eq->nsac)    ;
+        opt->rms_r  = double_alloc(eq->nsac)    ;
+        opt->p2p    = double_alloc(eq->nsac)    ;
+        opt->avg    = double_alloc(eq->nsac)    ;
+        hdr_tab(hd_synt, eq->nsac)              ; 
         flag2 = 1 ;
     }
     /* Set travel times */
@@ -1474,7 +1718,7 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
     ns = 0 ;
     opt->dmin = 2.e4 ;
     opt->dmax = 0.   ;  
-    for(i=0; i<*nsac; i++)
+    for(i=0; i<eq->nsac; i++)
     {
         /* Read data file list */
         if ( opt->op_pa <= 0 && opt->th_val <= 0)
@@ -1605,9 +1849,9 @@ void set_matrices (int *nsac, int *nsini,char ***sacfiles,sachdr **hd_synt,doubl
     }
     fclose(i_sac) ;
     /* Memory Freeing */
-    for(i=ns;i<*nsac;i++)
+    for(i=ns;i<eq->nsac;i++)
         free((void*)(*sacfiles)[i]) ;
-    *nsac  = ns ;
+    eq->nsac  = ns ;
     free((void*)tmparray) ;
     free((void*)dv)       ;
     free((void*)tv)       ;
@@ -1706,7 +1950,7 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
         fprintf(o_log,"screen_med:\n") ;
         fprintf(o_log,"   p2p_med: %15.8f\n",opt->p2p_med) ;
         fprintf(o_log,"   reject p2p < : %15.8f or > %15.8f\n",min,max) ;
-        fprintf(o_log,"   reject avg > : %15.8f \n",opt->p2p_med/2) ;
+        fprintf(o_log,"   reject avg > : %15.8f\n",opt->p2p_med/2) ;
       }
     newn = 0 ;
     for (j=0;j<*nsac;j++)
@@ -1857,35 +2101,37 @@ void load_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,
 }
 
 void realloc_gridsearch(int nsac, double **rms, double *global_rms, 
-                                   double ***dcalc,int flag)
+				   double ***dcalc,int flag)
 {
     int i, j ; 
     for(i=0 ; i<nsac ; i++)  /* Free predicted data vector */
     {
         for(j=0 ; j<flag ; j++)
-            free((void*)dcalc[i][j]) ;
+		        free((void*)dcalc[i][j]) ;
         free((void**)dcalc[i]);
     }
-    for(j=0 ; j<2*flag ; j++) /* Initialize rms vectors */
+    for(j=0 ; j<2*flag ; j++) /* Initialize rms vectors      */
     {
         global_rms[j] = 0. ;
         for(i=0 ; i<nsac ; i++)
-            rms[i][j] = 0.   ;
+		        rms[i][j] = 0.   ;
     }
 }
 
 
 
 
-void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_synt,double **data, 
-                                   double ***G,double ***dcalc,double **rms,double *global_rms,structopt *opt,
-                                   str_quake_params *eq,double *tsopt,double *rmsopt, FILE *o_log)
+
+void fast_ts_gridsearch(int M,int nd,double *dv,double *tv,sachdr *hd_synt,double **data, 
+				   double ***G,double ***dcalc,double **rms,structopt *opt,
+				   str_quake_params *eq,double *tsopt,double *rmsopt, FILE *o_log)
 {
     int    i,it, k, Nexp, ref_flag;
-    double Err, Cond,dt,ts,dtmin,dtmax,rmsini,tsopt2,rmsopt2,sdrM0[4]; 
+    double Err,dt,ts,dtmin,dtmax,rmsini,tsopt2,rmsopt2,sdrM0[4]; 
     FILE   *tmp, *o_gs   ;
     printf("FAST CENTROID TIME DELAY GRID SEARCH\n") ;
     fprintf(o_log,"Fast time-shift grid search is enabled (output : %s)\n",opt->tsgsfile) ;
+
     /* Initialize variables */
     dtmin = opt->dts_min - eq->ts ;
     dtmax = opt->dts_max - eq->ts ;
@@ -1897,7 +2143,7 @@ void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_s
     opt->ref_flag = 0;
     *tsopt  = 0. ;
     tsopt2  = dtmin  ;
-    rmsini  = 1000.*(global_rms[0]) ;
+    rmsini  = 1000.*(eq->global_rms[0]) ;
     *rmsopt = rmsini ;
     rmsopt2 = 1.1e10 ;
     tmp     = openfile_wt("_tmp_ts_table") ;
@@ -1905,71 +2151,72 @@ void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_s
     {
         opt->dts_val = dtmin ;
         while ( opt->dts_val <= dtmax )
-        {        
-            /* Compute inversion for opt->dts_val */
-            load_kernel(eq,opt,hd_synt,nsac,nd,dv,tv,G,o_log)      ;
-            if (opt->dc_flag) /* Double Couple inversion                 */
-            {               /* Warning: This has not been fully tested */
-                for(i=0;i<4;i++)
-                    sdrM0[i] = opt->priorsdrM0[i] ;               
-                inversion_dc(nsac,hd_synt,G,data,sdrM0,global_rms,opt,NULL) ;
-                sdr2mt(eq->vm[0],sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2]) ;
-            }
-            else
-            {
-                /* Free memory */
-                realloc_gridsearch(nsac, rms, global_rms, dcalc,1) ;        
-                inversion(M,nsac,hd_synt,G,data,eq->vm[0],&Cond,opt,NULL) ;
-                calc_data(nsac,hd_synt,G,eq->vm, data,dcalc,opt,NULL) ;   
-                calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms, opt) ;
-                /* Get RMS error */
-            }
-            Err = 1000.*(global_rms[0]) ;
-            ts  = eq->ts+opt->dts_val    ;
-            fprintf(tmp,"%03d %03d %10.4f %10.4f %10.4f %10.4f %10.4f %12.8f %12.8f\n",
-                            k,it,ts,eq->hd,eq->evla,eq->evlo,eq->evdp,Err,(global_rms[0])/(global_rms[1])) ;
-            printf("        ts = %10.4f rms = %12.8f mm\n",ts, Err) ;
-            if (Err < *rmsopt)
-            {
-                *rmsopt = Err ;
-                *tsopt   = opt->dts_val ;
-            }
-            else if (Err < rmsopt2)
-            {
-                rmsopt2 = Err ;
-                tsopt2  = opt->dts_val ;
-            }
-            opt->dts_val += dt ;
-            k++ ;
-        }
+		    {	 
+		        /* Compute inversion for opt->dts_val */
+		        load_kernel(eq,opt,hd_synt,eq->nsac,nd,dv,tv,G,o_log)      ;
+		        if (opt->dc_flag) /* Double Couple inversion                 */
+			      {               /* Warning: This has not been fully tested */
+			          for(i=0;i<4;i++)
+				        sdrM0[i] = opt->priorsdrM0[i] ;   	      
+			          inversion_dc(hd_synt,G,data,sdrM0,opt,NULL,eq) ;
+			          sdr2mt(eq->vm[0],sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2]) ;
+			      }
+		        else
+			      {
+			          /* Free memory */
+			          realloc_gridsearch(eq->nsac, rms, eq->global_rms, dcalc,1) ;	      
+			          inversion(M,hd_synt,G,data,opt,NULL,eq) ;
+			          calc_data(eq->nsac,hd_synt,G,eq->vm, data,dcalc,opt,NULL) ;   
+			          calc_rms(eq->nsac,hd_synt,data,dcalc,rms,eq->global_rms, opt) ;
+			          /* Get RMS error */
+			      }
+		        Err = 1000.*(eq->global_rms[0]) ;
+		        ts  = eq->ts+opt->dts_val    ;
+		        fprintf(tmp,"%03d %03d %10.4f %10.4f %10.4f %10.4f %10.4f %12.8f %12.8f\n",
+				        k,it,ts,eq->hd,eq->evla,eq->evlo,eq->evdp,Err,(eq->global_rms[0])/(eq->global_rms[1])) ;
+		        printf("        ts = %10.4f rms = %12.8f mm\n",ts, Err) ;
+		        if (Err < *rmsopt)
+			      {
+			          *rmsopt = Err ;
+			          *tsopt   = opt->dts_val ;
+			      }
+		        else if (Err < rmsopt2)
+			      {
+			          rmsopt2 = Err ;
+			          tsopt2  = opt->dts_val ;
+			      }
+		        opt->dts_val += dt ;
+		        k++ ;
+		    }
         printf("Optimum values: time_shift = %10.4f rms = %12.8f mm \n",eq->ts+*tsopt,*rmsopt) ;
         if (dtmax <= *tsopt + dt && Nexp < 5)
-        {
-            printf("Optimum value on the maximum explored time-shift\n   ... extending the time-shift grid-search area\n");
-            dtmin = *tsopt + dt   ;
-            dtmax = *tsopt + 4*dt ;
-            Nexp++;
-            continue ;
-        }
+		    {
+		        printf("Optimum value on the maximum explored time-shift\n   ... extending the time-shift grid-search area\n");
+		        dtmin = *tsopt + dt   ;
+		        dtmax = *tsopt + 4*dt ;
+		        Nexp++;
+		        continue ;
+		    }
         if (it>0)
-            dt = dt/2. ;
+		        dt = dt/2. ;
         if (tsopt2 <= *tsopt)
-        {
-            dtmin = tsopt2 - dt/2. ;
-            dtmax = (*tsopt)  + dt/2. ;
-        }
+		    {
+		        dtmin = tsopt2 - dt/2. ;
+		        dtmax = (*tsopt)  + dt/2. ;
+		    }
         else if (tsopt2 > *tsopt)
-        {
-            dtmin = (*tsopt)  - dt/2. ;
-            dtmax = tsopt2 + dt/2. ;
-        }
+		    {
+		        dtmin = (*tsopt)  - dt/2. ;
+		        dtmax = tsopt2 + dt/2. ;
+		    }
         if (dtmin < 1. - eq->ts)
-            while (dtmin <  1. - eq->ts)
-                dtmin += dt ;
+		        while (dtmin <  1. - eq->ts)
+		          dtmin += dt ;
         it++;
     }
     fclose(tmp);
     opt->ref_flag = ref_flag ;
+
     /* Write output file */
     o_gs = openfile_wt(opt->tsgsfile) ;
     fprintf( o_gs,"%10.4f %12.8f\n",eq->ts+*tsopt,*rmsopt);
@@ -1983,12 +2230,12 @@ void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_s
 
 
 
-void run_ts_gs(double *ts,int Ngrid, int nsac, int M, int nd, double *dv,
+void run_ts_gs(double *ts,int Ngrid, int M, int nd, double *dv,
                   double *tv, sachdr *hd_synt, double **data, str_quake_params *eq,
                   structopt *opt, double **vrms,int verbose)
 {
     int i,j;
-    double Cond,***dcalc,**rms,*global_rms,*sdrM0,***G=NULL ;
+    double ***dcalc,**rms,*sdrM0,***G=NULL ;
     str_quake_params eq_gs ;  
     #ifdef _OPENMP      
     int rang,ntaches;
@@ -1997,42 +2244,46 @@ void run_ts_gs(double *ts,int Ngrid, int nsac, int M, int nd, double *dv,
     #endif
     sdrM0 = NULL;
     /* Memory allocation */
-    G = double_alloc3p( nsac ) ; 
-    for(i=0;i<nsac;i++)
+    G = double_alloc3p( eq->nsac ) ; 
+    for(i=0;i<eq->nsac;i++)
         G[i] = double_alloc2(NM,hd_synt[i].npts) ; 
-    dcalc = double_alloc3p(nsac)       ;  
+    dcalc = double_alloc3p(eq->nsac)       ;  
     if (opt->dc_flag)
        sdrM0    = double_alloc(4)  ;
-    rms = double_calloc2(nsac,2) ;
-    global_rms    = double_calloc(2)     ;
+    rms = double_calloc2(eq->nsac,2) ;
     eq_gs.wp_win4 = double_alloc(4)      ;   
     eq_gs.vm      = double_calloc2(2,NM) ;
-    copy_eq(eq,&eq_gs) ;  
+    eq_gs.global_rms = double_alloc(2)  ;    
+    copy_eq(eq,&eq_gs) ;
+    for(j=0 ; j<2 ; j++)
+      eq_gs.global_rms[j] = 0. ;    
     /* Main loop */
     for(i=0;i<Ngrid;i++)
     {
         eq_gs.ts = ts[i];
         eq_gs.hd = ts[i];
         /* Compute G */
-        calc_kernel(&eq_gs,opt,hd_synt,nsac,"l",nd,dv,tv,G,NULL) ;
+        calc_kernel(&eq_gs,opt,hd_synt,"l",nd,dv,tv,G,NULL) ;
         /* Inversion */
         if (opt->dc_flag) /* Double Couple inversion                 */
         {                /* Warning: This has not been fully tested */
             for(j=0;j<4;j++)
                   sdrM0[j] = opt->priorsdrM0[j] ;           
-            inversion_dc(nsac,hd_synt,G,data,sdrM0,vrms[i],opt,NULL) ;
+            inversion_dc(hd_synt,G,data,sdrM0,opt,NULL,&eq_gs) ;
             sdr2mt(eq_gs.vm[0],sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2]) ;
+            vrms[i][0] = eq_gs.global_rms[0] ;
+            vrms[i][1] = eq_gs.global_rms[1] ;            
         }
         else
         {
-            inversion(M,nsac,hd_synt,G,data,eq_gs.vm[0],&Cond,opt,NULL) ;
+            inversion(M,hd_synt,G,data,opt,NULL,&eq_gs) ;
             /* Predicted data  */
-            calc_data(nsac,hd_synt,G,eq_gs.vm,data,dcalc,opt,NULL) ;
+            calc_data(eq->nsac,hd_synt,G,eq_gs.vm,data,dcalc,opt,NULL) ;
             /* RMS error       */
-            calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,opt) ;
-            vrms[i][0] = global_rms[0] ;
-            vrms[i][1] = global_rms[1] ;
-            realloc_gridsearch(nsac, rms, global_rms, dcalc,1) ;
+            calc_rms(eq->nsac,hd_synt,data,dcalc,rms,eq_gs.global_rms,opt) ;
+            vrms[i][0] = eq_gs.global_rms[0] ;
+            vrms[i][1] = eq_gs.global_rms[1] ;
+            realloc_gridsearch(eq->nsac, rms, eq_gs.global_rms, dcalc,1) ;
         }
         fflush(stderr);
   #ifdef _OPENMP      
@@ -2046,20 +2297,20 @@ void run_ts_gs(double *ts,int Ngrid, int nsac, int M, int nd, double *dv,
         fflush(stdout); 
     }
     /* Free memory */
+    free((void*)eq_gs.global_rms) ;      
     free((void*)eq_gs.wp_win4) ;
     free((void*)eq_gs.vm[0])   ;
     free((void*)eq_gs.vm[1])   ;
     free((void**)eq_gs.vm)     ;
     if (opt->dc_flag)
         free((void*)sdrM0);
-    for(i=0 ; i<nsac ; i++)
+    for(i=0 ; i<eq->nsac ; i++)
     {
         free((void*)rms[i] ) ;
         free_G(&G[i]);
     }
     free((void***)dcalc)    ;
     free((void**)rms )      ;
-    free((void*)global_rms) ;  
 }
 
 void ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_synt,double **data, 
@@ -2107,10 +2358,10 @@ void ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_synt,d
         {
   #pragma omp for schedule(dynamic)
             for(j=0;j<Ngrid;j++)
-                run_ts_gs(new_ts+j,1,nsac,M,nd,dv,tv,hd_synt,data,eq,opt,vrms+j,1) ;
+                run_ts_gs(new_ts+j,1,M,nd,dv,tv,hd_synt,data,eq,opt,vrms+j,1) ;
         }
   #else
-        run_ts_gs(new_ts,Ngrid,nsac,M,nd,dv,tv,hd_synt,data,eq,opt,vrms,1) ;
+        run_ts_gs(new_ts,Ngrid,M,nd,dv,tv,hd_synt,data,eq,opt,vrms,1) ;
   #endif      
         /* Find optimal timings, Fill history */
         for(i=0;i<Ngrid;i++)
@@ -2133,7 +2384,7 @@ void ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_synt,d
             }
             k++;
         }
-        printf("Optimum values: time_shift = half_duration = %10.4f ; rms = %12.8f mm \n",*tsopt,*rmsopt) ;
+        printf("Optimum values: time_shift = half_duration = %10.4f ; rms = %12.8f mm\n",*tsopt,*rmsopt) ;
         if (tsmax <= *tsopt + dt && Nexp < 5)
         {
             printf("Optimum value on the maximum explored time-shift (=half-duration)\n   ... extending the timing grid-search area\n");
@@ -2283,6 +2534,10 @@ void copy_eq(str_quake_params *i_eq, str_quake_params *o_eq)
     o_eq->evla = i_eq->evla ;
     o_eq->evlo = i_eq->evlo ;
     o_eq->evdp = i_eq->evdp ;
+    o_eq->nsac = i_eq->nsac ;
+    o_eq->nsini = i_eq->nsini ;
+    o_eq->Cond = i_eq->Cond ;
+    memcpy(o_eq->global_rms,i_eq->global_rms,2*sizeof(double));    
 }
 
 
@@ -2427,7 +2682,7 @@ void extend_xy_gs(double **old_loc,int Nold_loc,double *gfdep,int ngfdep,double 
     *Nnew_loc = 0;
     if (Next)
     {
-        printf(" ... extending the spatial grid-search area ... \n");
+        printf(" ... extending the spatial grid-search area ...\n");
         *Nnew_loc = Next;
     }
     LL[0] = NLL[0] ;
@@ -2437,12 +2692,12 @@ void extend_xy_gs(double **old_loc,int Nold_loc,double *gfdep,int ngfdep,double 
 }   
 
 
-void run_xy_gs(double **coords,int Ngrid,int nsac,int M,int nd,double *dv,
-                  double *tv,sachdr *hd_synt,double **data,str_quake_params *eq,
-                  structopt *opt,double **vrms,double **vms,int verbose)
+void run_xy_gs(double **coords,int Ngrid,int M,int nd,double *dv,
+               double *tv,sachdr *hd_synt,double **data,str_quake_params *eq,
+               structopt *opt,double **vrms,double **vms,int verbose)
 {
     int i,j;
-    double Cond,***dcalc,**rms,*global_rms,*sdrM0,***G=NULL ;
+    double ***dcalc,**rms,*sdrM0,***G=NULL ;
     structopt opt_gs       ;
     str_quake_params eq_gs ;  
     #ifdef _OPENMP      
@@ -2452,23 +2707,25 @@ void run_xy_gs(double **coords,int Ngrid,int nsac,int M,int nd,double *dv,
     #endif
     sdrM0 = NULL;
     /* Memory allocation */
-    G = double_alloc3p( nsac ) ; 
-    for(i=0;i<nsac;i++)
+    G = double_alloc3p( eq->nsac ) ; 
+    for(i=0;i<eq->nsac;i++)
         G[i] = double_alloc2(NM,hd_synt[i].npts) ; 
-    dcalc = double_alloc3p(nsac)       ;  
+    dcalc = double_alloc3p(eq->nsac)       ;  
     if (opt->dc_flag)
         sdrM0    = double_alloc(4)  ;
-    rms = double_calloc2(nsac,2) ;
-    global_rms    = double_calloc(2)     ;
+    rms = double_calloc2(eq->nsac,2) ;
     eq_gs.wp_win4 = double_alloc(4)      ;   
     eq_gs.vm      = double_calloc2(2,NM) ;
-    copy_eq(eq,&eq_gs) ;    
-    opt_gs.rms_in = double_alloc(nsac) ;
-    opt_gs.rms_r  = double_alloc(nsac) ;
-    opt_gs.p2p    = double_alloc(nsac) ;
-    opt_gs.avg    = double_alloc(nsac) ;
-    opt_gs.wgt    = double_alloc(nsac) ;
-    copy_opt(opt,&opt_gs,nsac) ;
+    eq_gs.global_rms = double_alloc(2)  ;
+    copy_eq(eq,&eq_gs) ;
+    for(j=0 ; j<2 ; j++)
+      eq_gs.global_rms[j] = 0. ;       
+    opt_gs.rms_in = double_alloc(eq->nsac) ;
+    opt_gs.rms_r  = double_alloc(eq->nsac) ;
+    opt_gs.p2p    = double_alloc(eq->nsac) ;
+    opt_gs.avg    = double_alloc(eq->nsac) ;
+    opt_gs.wgt    = double_alloc(eq->nsac) ;
+    copy_opt(opt,&opt_gs,eq->nsac) ;    
     /* Main loop */
     for(i=0;i<Ngrid;i++)
     {
@@ -2476,25 +2733,29 @@ void run_xy_gs(double **coords,int Ngrid,int nsac,int M,int nd,double *dv,
         eq_gs.evlo = coords[i][1] ;
         eq_gs.evdp = coords[i][2] ;
         /* Compute G       */
-        calc_kernel(&eq_gs,&opt_gs,hd_synt,nsac,"l",nd,dv,tv,G,NULL) ;
+        calc_kernel(&eq_gs,&opt_gs,hd_synt,"l",nd,dv,tv,G,NULL) ;        
         /* Inversion       */
         if (opt->dc_flag) /* Double Couple inversion                 */
         {               /* Warning: This has not been fully tested */
             for(j=0;j<4;j++)
                 sdrM0[j] = opt_gs.priorsdrM0[j] ;      
-            inversion_dc(nsac,hd_synt,G,data,sdrM0,vrms[i],&opt_gs,NULL) ;
+            inversion_dc(hd_synt,G,data,sdrM0,&opt_gs,NULL,&eq_gs) ;
             sdr2mt(vms[i],sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2]) ;
+            vrms[i][0] = eq_gs.global_rms[0] ;
+            vrms[i][1] = eq_gs.global_rms[1] ;
         }
         else
         {
-            inversion(M,nsac,hd_synt,G,data,vms[i],&Cond,&opt_gs,NULL) ;
+            inversion(M,hd_synt,G,data,&opt_gs,NULL,&eq_gs);
+            for(j=0;j<NM;j++)
+              vms[i][j] = eq_gs.vm[0][j];            
             /* Predicted data  */
-            calc_data(nsac,hd_synt,G,vms+i,data,dcalc,&opt_gs,NULL) ;
+            calc_data(eq->nsac,hd_synt,G,vms+i,data,dcalc,&opt_gs,NULL) ;
             /* RMS error       */
-            calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt_gs) ;
-            vrms[i][0] = global_rms[0] ;
-            vrms[i][1] = global_rms[1] ;
-            realloc_gridsearch(nsac, rms, global_rms, dcalc,1) ;
+            calc_rms(eq->nsac,hd_synt,data,dcalc,rms,eq_gs.global_rms,&opt_gs) ;
+            vrms[i][0] = eq_gs.global_rms[0] ;
+            vrms[i][1] = eq_gs.global_rms[1] ;
+            realloc_gridsearch(eq->nsac, rms, eq_gs.global_rms, dcalc,1) ;
         }
         fflush(stderr);
         #ifdef _OPENMP      
@@ -2509,6 +2770,7 @@ void run_xy_gs(double **coords,int Ngrid,int nsac,int M,int nd,double *dv,
         fflush(stdout);      
     }
     /* Free memory */
+    free((void*)eq_gs.global_rms) ;    
     free((void*)eq_gs.wp_win4) ;
     free((void*)eq_gs.vm[0])   ;
     free((void*)eq_gs.vm[1])   ;
@@ -2520,20 +2782,18 @@ void run_xy_gs(double **coords,int Ngrid,int nsac,int M,int nd,double *dv,
     free((void*)opt_gs.wgt)    ;
     if (opt->dc_flag)
         free((void*)sdrM0);
-    for(i=0 ; i<nsac ; i++)
+    for(i=0 ; i<eq->nsac ; i++)
     {
         free((void*)rms[i] ) ;
         free_G(&G[i]);
     }
     free((void***)dcalc)    ;
     free((void**)rms )      ;
-    free((void*)global_rms) ;
 }
 
-void xy_gridsearch(int nsac,int M, int nd,double *dv,double *tv, sachdr *hd_synt,
-                          double **data,double ***G,double ***dcalc,double **rms,double *global_rms,
-                          structopt *opt,str_quake_params *eq,double *rmsopt,double *latopt,double *lonopt,
-                          double *depopt,FILE *o_log)
+void xy_gridsearch(int M, int nd,double *dv,double *tv, sachdr *hd_synt, double **data,double ***G,
+                   double ***dcalc,double **rms, structopt *opt,str_quake_params *eq,double *rmsopt,
+                   double *latopt,double *lonopt, double *depopt,FILE *o_log)
 {
     int i,j,k,it=0,ncel=0,Nexp=0,MaxNexp=5,Ngrid,Ngridini,MaxNgrid,flag=0,ref_flag;
     int    l,IZ[2],ndep, n2dep ;
@@ -2599,7 +2859,7 @@ void xy_gridsearch(int nsac,int M, int nd,double *dv,double *tv, sachdr *hd_synt
     {
         FILLCOOR2(opt_loc[i],0.,0.,0.,1.e+10)
     }
-    rmsini = 1000.*(global_rms[0]) ;
+    rmsini = 1000.*(eq->global_rms[0]) ;
     FILLCOOR2(opt_loc[0],eq->evla,eq->evlo,eq->evdp,rmsini)
     ref_flag = opt->ref_flag ;
     opt->ref_flag = 0        ;
@@ -2643,10 +2903,10 @@ void xy_gridsearch(int nsac,int M, int nd,double *dv,double *tv, sachdr *hd_synt
         {
         #pragma omp for schedule(dynamic)
             for(j=0;j<Ngrid;j++)
-                run_xy_gs(new_loc+j,1,nsac,M,nd,dv,tv,hd_synt,data,eq,opt,vrms+j,vms+j,1) ;
+                run_xy_gs(new_loc+j,1,M,nd,dv,tv,hd_synt,data,eq,opt,vrms+j,vms+j,1) ;
         }
         #else
-            run_xy_gs(new_loc,Ngrid,nsac,M,nd,dv,tv,hd_synt,data,eq,opt,vrms,vms,1) ;
+            run_xy_gs(new_loc,Ngrid,M,nd,dv,tv,hd_synt,data,eq,opt,vrms,vms,1) ;
         #endif
 
         /* Find optimal points, Fill location history */
@@ -2747,7 +3007,9 @@ void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char 
     FILE   *i_sac;  
     sachdr hd_data;
     /* Opening data file list */
-    i_sac = openfile_rt(opt->i_saclst,nsac) ;
+    i_sac = openfile_rt(opt->i_saclst,&eq->nsac) ;
+    *nsac = eq->nsac ;
+    eq->nsini = *nsac;
     /* Allocating memory */
     tmparray = double_alloc((int)__LEN_SIG__) ;  
     *data    = double_alloc2p(*nsac) ;
@@ -2995,7 +3257,7 @@ int fill_kernel_G(sachdr *hd_GF, sachdr *hd_data, double Ptt, double twp_beg,
 /***************************************************/
 /*           Set the kernel matrix G               */
 /***************************************************/
-void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,char *itype,
+void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,char *itype,
                         int nd,double *dv,double *tv, double ***G,FILE *o_log)
 {
     int   i,j,ns,jsac,nsects,flag,flag2,ngfcomp=6,ierror=1 ;
@@ -3006,7 +3268,7 @@ void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,c
     double gcarc,Ptt,twp_beg,twp_end, *ref_vm=NULL ;
     double *b1,*b2,*a1,*a2,gain,dt=1.; 
     sachdr hdr; 
-    make_chan_list(hd_synth,nsac,&stlats,&stlons);
+    make_chan_list(hd_synth,eq->nsac,&stlats,&stlons);
     /* Memory Allocations */
     if (opt->ref_flag)
     {
@@ -3014,10 +3276,10 @@ void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,c
         for(i=0;i<NM;i++) 
             ref_vm[i] = eq->vm[1][i] ;
     }
-    dists = float_calloc(nsac) ; 
-    azs   = float_calloc(nsac) ;
-    bazs  = float_calloc(nsac) ;
-    xdegs = float_calloc(nsac) ;
+    dists = float_calloc(eq->nsac) ; 
+    azs   = float_calloc(eq->nsac) ;
+    bazs  = float_calloc(eq->nsac) ;
+    xdegs = float_calloc(eq->nsac) ;
     GFs   = double_alloc2(10,__LEN_SIG__) ;/* GFs: Rrr, Rtt, Rpp, Rrt  */
     S     = double_alloc(__LEN_SIG__)     ;/*    Vertical components   */
     TH    = double_alloc(__LEN_SIG__)     ;/*    Radial components     */
@@ -3030,7 +3292,7 @@ void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,c
     a1 = double_alloc(nsects) ; 
     a2 = double_alloc(nsects) ;
     /* Distance, azimuth, back-azimuth, etc          */
-    distaz(eq->evla, eq->evlo, stlats, stlons, nsac, dists, azs, bazs, xdegs, &nerr) ;
+    distaz(eq->evla, eq->evlo, stlats, stlons, eq->nsac, dists, azs, bazs, xdegs, &nerr) ;
     flag = 0 ;  
     for(i=0;i<ngfcomp;i++) /* Main loop */
     {
@@ -3038,14 +3300,14 @@ void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,c
         for(j=0;j<ngfcomp;j++) /* Inititializing the MT components */
             eq->vm[1][j] = 0. ;
         eq->vm[1][i]   = 1. ;
-        for(jsac=0;jsac<nsac;jsac++)
-        {
+        for(jsac=0;jsac<eq->nsac;jsac++)
+        {                  
             gcarc = (double)hd_synth[jsac].gcarc;
-            trav_time(gcarc,tv,dv,nd,&Ptt,&ierror) ;
+            trav_time(gcarc,tv,dv,nd,&Ptt,&ierror) ;            
             wp_time_window(gcarc,eq->wp_win4,&twp_beg,&twp_end) ; /* Data Time Window  */
             flag2 = 0;
             ori = hd_synth[ns].kcmpnm[2];
-                
+            
             if ( ori == 'Z' )
                 fast_synth_only_Z_sub(azs[jsac],bazs[jsac],xdegs[jsac], tv,dv,nd,eq,&hdr,GFs,S);
             else if ( ori == 'N' || ori == 'E' || ori == '1' || ori == '2' ) 
@@ -3055,7 +3317,8 @@ void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,c
             }
             else
                 continue;
-                
+
+            
             conv_by_stf(eq->ts,eq->hd,itype,&hdr,S,x_conv) ;/* Perform convolution */
             if (flag == 0) /* Set the butterworth sos (dt must be the same for all stations)   */
             {
@@ -3085,9 +3348,9 @@ void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,c
             hd_synth[jsac].b  = hdr.b + hd_synth[jsac].o - hdr.o ;
             ns++;
         }
-        if (nsac!=ns)
+        if (eq->nsac!=ns)
         {       
-            fprintf(stderr,"\n*** ERROR: Kernel G is incomplete (%d vs %d)\n",nsac,ns);  
+            fprintf(stderr,"\n*** ERROR: Kernel G is incomplete (%d vs %d)\n",eq->nsac,ns);  
             fprintf(stderr,"    -> Exiting\n") ;
             fflush(stderr);
             exit(1);        

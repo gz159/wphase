@@ -58,10 +58,9 @@ void get_param2(char *file, structopt *opt, str_quake_params *eq) ;
 
 int main(int argc, char *argv[])
 {
-    int i,j,nsac,M,nsini ;
-    double s1,d1,r1,s2,d2,r2,gap,Cond ;
-    double M0,Mw,diplow,M0_12,**TM ;
-    double *eval3,*global_rms,*data_norm ;
+    int i,j,M;
+    double s2, d2, r2;
+    double *eval3,*data_norm, **TM ;
     double **data,**rms,***G = NULL,***dcalc ;  
     double sdrM0[4];
     char **sacfiles ;
@@ -93,20 +92,20 @@ int main(int argc, char *argv[])
     w_log_header(argv, &opt, &eq, eq.wp_win4, o_log);
 
     /* Set G and data       */
-    set_matrices (&nsac,&nsini,&sacfiles,&hd_synt,&data,&G,&opt,&eq,o_log); 
+    set_matrices (&sacfiles,&hd_synt,&data,&G,&opt,&eq,o_log); 
     fflush(stdout);
 
     /* Screening            */
     if (opt.med_val > 0.) 
     {
-        median(nsac, &opt);
-        screen_med(&nsac, sacfiles, data, G, hd_synt, &opt, o_log); 
+        median(eq.nsac, &opt);
+        screen_med(&eq.nsac, sacfiles, data, G, hd_synt, &opt, o_log); 
     }
     if (opt.th_val > 0.)
-        screen_rms(&nsac, sacfiles, data, G, hd_synt, &opt, o_log);
+        screen_rms(&eq.nsac, sacfiles, data, G, hd_synt, &opt, o_log);
     if (opt.rms_r_th > 0.)
-        screen_ratio(&nsac,sacfiles,data,G,hd_synt,&opt,o_log);
-    if (nsac < 1) 
+        screen_ratio(&eq.nsac,sacfiles,data,G,hd_synt,&opt,o_log);
+    if (eq.nsac < 1) 
     {
         fprintf(stderr,"Error : Too few accepted channels\n");
         fprintf(stderr,"....... Clean manually the input file\n");
@@ -114,54 +113,41 @@ int main(int argc, char *argv[])
         fclose(o_log);
         exit(1);
     }  
-    printf("%4d accepted_channels (%d rejected)\n",nsac,nsini - nsac);
-    fprintf(o_log,"accepted_channels: %4d (%d rejected)\n",nsac,nsini - nsac);
+    printf("%4d accepted_channels (%d rejected)\n",eq.nsac,eq.nsini - eq.nsac);
+    fprintf(o_log,"accepted_channels: %4d (%d rejected)\n",eq.nsac,eq.nsini - eq.nsac);
     fflush(o_log);
 
     /* RMS per channel*/
-    data_norm = double_alloc(nsac);
-    calc_data_norm(data,hd_synt,nsac,data_norm);
+    data_norm = double_alloc(eq.nsac);
+    calc_data_norm(data,hd_synt,eq.nsac,data_norm);
 
     /* Inversion      */
-    global_rms = double_calloc(2*(opt.ref_flag+1)) ;  
+    eq.global_rms = double_calloc(2*(opt.ref_flag+1)) ;
     if (opt.dc_flag) /* Double Couple inversion               */
     {              /* Warning: This has not been fully tested */
-        inversion(M,nsac,hd_synt,G,data,eq.vm[0],&Cond,&opt,NULL);
+        inversion(M,hd_synt,G,data,&opt,NULL, &eq);
         get_planes(eq.vm[0],TM,eval3,&sdrM0[0],&sdrM0[1],&sdrM0[2],&s2,&d2,&r2);
         sdrM0[3] = (fabs(eval3[0]) + fabs(eval3[2])) / 2.;
         for(i=0;i<opt.ip;i++)
             sdrM0[opt.ib[i]-1] = opt.priorsdrM0[opt.ib[i]-1];
         fprintf(stderr,"WARNING: **** Double couple inversion have not been fully tested yet ****\n");
-        inversion_dc(nsac,hd_synt,G,data,sdrM0,global_rms,&opt,o_log);
+        inversion_dc(hd_synt,G,data,sdrM0,&opt,o_log, &eq);
         sdr2mt(eq.vm[0],sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2]);
     }
     else
-        inversion(M,nsac,hd_synt,G,data,eq.vm[0],&Cond,&opt,o_log);
+        inversion(M,hd_synt,G,data,&opt,o_log, &eq);
   
     /* Predicted data  */
-    dcalc = double_alloc3p(nsac);
-    calc_data(nsac,hd_synt,G,eq.vm,data,dcalc,&opt,o_log);
+    dcalc = double_alloc3p(eq.nsac);
+    calc_data(eq.nsac,hd_synt,G,eq.vm,data,dcalc,&opt,o_log);
 
     /* Get RMS and Gap */
-    rms = double_calloc2(nsac, 2*(opt.ref_flag+1));
-    calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt);
-    get_gap(hd_synt, nsac, &gap);
-    w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt); 
-
-    /* Set stike/dip/rake */
-    get_planes(eq.vm[0], TM, eval3, &s1,&d1,&r1, &s2,&d2,&r2);
-    write_cmtf(opt.o_cmtf, &eq, eq.vm[0]);  
-
-    /* Set Moment and Magnitude (Harvard Definition) */
-    M0     = ((fabs(eval3[0]) + fabs(eval3[2])) * (double)POW) / 2.; 
-    Mw     = (log10(M0) - 16.1) / 1.5;
-    diplow = d2;
-    if (d1 < d2) 
-        diplow = d1;
-    M0_12  = M0 * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD);
+    rms = double_calloc2(eq.nsac, 2*(opt.ref_flag+1));
+    calc_rms(eq.nsac,hd_synt,data,dcalc,rms,eq.global_rms,&opt);
+    w_o_saclst(eq.nsac,sacfiles,hd_synt,rms,data_norm,&opt); 
 
     /* Output */
-    output_products(&opt,&eq,s1,d1,r1,s2,d2,r2,TM,eval3,M0,M0_12,Mw,global_rms,gap,Cond,nsac,hd_synt,o_log);
+    output_products(&opt,&eq,hd_synt,o_log,argv);
     fclose(o_log);
 
     /* Memory Freeing */
@@ -170,9 +156,8 @@ int main(int argc, char *argv[])
     free((void*)eq.vm[1]);
     free((void**)eq.vm);
     free((void*)eval3);
-    free((void*)global_rms);
     free((void*)data_norm);
-    for(i=0 ; i<nsac ; i++)
+    for(i=0 ; i<eq.nsac ; i++)
     {
         free((void*)data[i]);
         free((void*)rms[i] );
@@ -434,7 +419,7 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
     opt->dts_min   = 0. ;
     opt->dts_max   = 0. ;
     opt->dts_step  = 0. ;
-    opt->ts_Nit    = 1  ;
+    opt->ts_Nit    = 0  ;
     opt->xy_dx     = 0. ;
     opt->xy_Nx     = 0  ;
     opt->xy_Nit    = 0  ;

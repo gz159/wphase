@@ -46,6 +46,9 @@ typedef struct
   double fl, fh, tol,  flow, fhigh    ;
   double preevent, fend, ts, hd ;
   double *wp_win4, **vm   ;
+  double *global_rms ;
+  double Cond ;
+  int nsac, nsini ;
 } str_quake_params ;
 
 

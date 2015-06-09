@@ -1,6 +1,6 @@
 /***************************************************************************
 *
-*                     W phase source inversion package              
+*	              W phase source inversion package 	            
 *                               -------------
 *
 *        Main authors: Zacharie Duputel, Luis Rivera and Hiroo Kanamori
@@ -87,25 +87,31 @@ int main(int argc, char *argv[])
     strcpy(o_sacfile, argv[4])    ; 
     get_filt_params(i_master,&eq)           ;
     get_id_dec(decfile,&n,&ids,&c1,&c2,&c3) ;
+
     /* Allocate data tabs */
     MAX   = (int) __LEN_SIG__ ;
     x_in  = double_alloc(MAX) ;
     x_int = double_alloc(MAX) ;
+
     /* Allocate tree and sac header */
     hdr_init(&hdr)      ;
     datfil = alloctree();
     datfil->d = NULL ;
     datfil->g = NULL ;
+
     /* Allocate sac filenames */
     x_int_fil = char_alloc(FSIZE);
+
     /* Allocate id */
     id = char_alloc(IDSIZE);
+
     /* Allocate sos */
     nsects = (eq.flow > 0.)? eq.filtorder+1 : eq.filtorder/2+1;
     b1 = double_alloc(nsects);
     b2 = double_alloc(nsects);
     a1 = double_alloc(nsects);
     a2 = double_alloc(nsects);
+
     /* Open Data File Lists */
     i_sacf = openfile_rt(i_sacfile,&nsac) ;
     o_sacf = openfile_wt(o_sacfile)       ;
@@ -113,39 +119,40 @@ int main(int argc, char *argv[])
     datfil->occur = 1 ;
     datfil->npts = -12345 ;
     while( (tmp=fscanf(i_sacf,"%s %s %s %s %s %lf %lf %lf %lf %lf\n",
-                     datfil->file,datfil->sta,datfil->net,datfil->cmp,
-                         datfil->locid,&datfil->stla,&datfil->stlo,&datfil->cmpaz,
-                     &datfil->az,&datfil->xdeg)) != EOF )
+		       datfil->file,datfil->sta,datfil->net,datfil->cmp,
+			   datfil->locid,&datfil->stla,&datfil->stlo,&datfil->cmpaz,
+		       &datfil->az,&datfil->xdeg)) != EOF )
     {
         if (tmp == 0)
-            break;
+	          break;
         else
-            check_scan(10,tmp,i_sacfile,i_sacf) ;
+	          check_scan(10,tmp,i_sacfile,i_sacf) ;
+
         /* Read input sac file */
         rhdrsac(datfil->file,&hdr,&ierror) ;
         if (hdr.npts > MAX) 
-            hdr.npts = MAX ;      
+            hdr.npts = MAX ;	
         rdatsac(datfil->file,&hdr,x_in,&ierror) ;
         if (hdr.npts<2)
-        {
-            fprintf(stderr,"Warning (rec_dec_filt) : %s (rejected) npts < 2\n",datfil->file);
-            continue;
-        }
+	      {
+	          fprintf(stderr,"Warning (rec_dec_filt) : %s (rejected) npts < 2\n",datfil->file);
+	          continue;
+	      }
         /* Set the butterworth sos (samp. rate must be the same for all stations)*/
-        if (count==0 && i==0)     
-        {
-            dt = (double)hdr.delta;
-            if (eq.flow>0.)
-                bpbu2sos(eq.flow,eq.fhigh,dt,eq.filtorder,&gain,b1+1,b2+1,a1+1,a2+1);
-            else
-                lpbu2sos(eq.fhigh,dt,eq.filtorder,&gain,b1+1,b2+1,a1+1,a2+1);
-        }
+        if (count==0 && i==0)	
+	      {
+	          dt = (double)hdr.delta;
+	          if (eq.flow>0.)
+	              bpbu2sos(eq.flow,eq.fhigh,dt,eq.filtorder,&gain,b1+1,b2+1,a1+1,a2+1);
+	          else
+	              lpbu2sos(eq.fhigh,dt,eq.filtorder,&gain,b1+1,b2+1,a1+1,a2+1);
+	      }
         else if (dt!=(double)hdr.delta)
-        {
-            fprintf(stderr, "ERROR (rec_dec_filt): non uniform samp. period between sac files, file : %s\n",datfil->file);
-            fclose(i_sacf);
-            exit(1);
-        }
+	      {
+	          fprintf(stderr, "ERROR (rec_dec_filt): non uniform samp. period between sac files, file : %s\n",datfil->file);
+	          fclose(i_sacf);
+	          exit(1);
+	      }
         /* Set filenames */
         strcpy(x_int_fil,datfil->file) ;
         strcat(x_int_fil,".id") ;
@@ -153,18 +160,18 @@ int main(int argc, char *argv[])
 
         /* Base line operations */
         if (eq.idtr==1)  /*   detrend and taper, eq.preevent = duration of taper at the beginning */
-        {              /*                      eq.fend = duration of taper at the end           */
-            dtrd( x_in,hdr.npts) ;                       /* dtrend */
-            beg = (int)(eq.preevent/hdr.delta+0.5);
-            end = (int)(eq.fend/hdr.delta+0.5);
-            taper(x_in,hdr.npts,eq.preevent,eq.fend) ;   /* taper  */
-        }
+	      {                /*                      eq.fend = duration of taper at the end           */
+	          dtrd( x_in,hdr.npts) ;                       /* dtrend */
+	          beg = (int)(eq.preevent/hdr.delta+0.5);
+	          end = (int)(eq.fend/hdr.delta+0.5);
+	          taper(x_in,hdr.npts,eq.preevent,eq.fend) ;   /* taper  */
+	      }
         else if (eq.idtr==2)   /*   shift the base line, eq.preevent=duration over which the  */
-        {                    /*                      base line is defined, eq.fend = dummy  */
-            beg = 0;
-            end = (int)(eq.preevent/hdr.delta)-1;
-            rmean(x_in,hdr.npts,&beg,&end);
-        }
+	      {                      /*                      base line is defined, eq.fend = dummy  */
+	          beg = 0;
+	          end = (int)(eq.preevent/hdr.delta)-1;
+	          rmean(x_in,hdr.npts,&beg,&end);
+	      }
         /* Trapezoidal numerical integration */
         trapz(x_in,hdr.npts,(double)hdr.delta,x_int);
         /* Write header values and data in the sac input file */
@@ -172,7 +179,7 @@ int main(int argc, char *argv[])
         makeid(id,&hdr);
         i = findid(id,ids,n);
         if (i == -1)
-            continue ;
+	          continue ;
         /* Set the first line of the sos (Deconvolution) */
         b1[0] = c2[i]/c3[i] ;
         b2[0] = c1[i]/c3[i] ;
@@ -192,7 +199,13 @@ int main(int argc, char *argv[])
     }
     fclose(i_sacf) ;
     fclose(o_sacf) ;
+
     printf("%d channels remain after deconvolution and filtering (%d rejected)\n",count,nsac-count) ;
+    FILE * testfile = fopen("test.ini", "w");
+    fprintf(testfile, "[prepare__dec_filt]\n");
+    fprintf(testfile, "nb_channel_dec=%d\n", count);
+    fprintf(testfile, "nb_rejected_channels_dec=%d\n", nsac-count);
+    fclose(testfile);
 
     /* Memory Freeing */
     free((void *)decfile);
@@ -236,7 +249,7 @@ void get_filt_params(char *file, str_quake_params *eq)
     strcpy(keys[i++],"DMAX")     ;
     get_i_master(file,keys,6,eq) ;
     for(i=0 ; i<6 ; i++)
-        free((void*)keys[i]) ;
+       free((void*)keys[i]) ;
     free((void**) keys )   ;
 }
 
@@ -265,7 +278,7 @@ int findid(char *id, char **ids, int n)
     for (i=0; i<n; i++)
     {
         if (strcmp(id,ids[i])==0)
-            return i;
+	      return i;
     }
     fprintf (stderr, "WARNING (rec_dec_filt): %s not found in id list (rejected)\n",id) ;
     return -1;
@@ -275,7 +288,7 @@ int findid(char *id, char **ids, int n)
 void trapz(double *x_in, int npts, double dt, double *x_int)
 {
     int i;
-  
+    
     //x_int = (double *) malloc (npts * sizeof(double));
     x_int[0] = 0.0 ;
     for (i=1 ; i < npts ; i++)
@@ -295,7 +308,7 @@ void get_id_dec(char *file, int *n, char ***id, double **a1, double **a2, double
     (*a1) = double_alloc((*n));
     (*a2) = double_alloc((*n));
     (*a3) = double_alloc((*n));
-  
+    
     for(i=0 ; i<(*n) ; i++)
     {
         tmp = fscanf (decin, "%s %lf %lf %lf",(*id)[i],(*a1)+i,(*a2)+i,(*a3)+i);

@@ -27,6 +27,7 @@
 *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 ****************************************************************************/
+#define VERSION 252
 
 #ifndef POW
 #define POW 1.e28
@@ -72,6 +73,7 @@
 #ifndef NCOM
 #define NCOM 50
 #endif
+
 
 typedef struct
 {
@@ -119,15 +121,15 @@ int  fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int n
 	    structopt *opt, FILE *o_log) ;
 void comp_GtG(int M, int nsac, sachdr *hd_synt, double ***G, double **GtG, 
 	      structopt *opt) ;
-void inversion(int M, int nsac, sachdr *hd_synt, double ***G, double **d, 
-		 double *vma, double *Cond, structopt *opt, FILE *o_log) ;
+void inversion(int M, sachdr *hd_synt, double ***G, double **d, 
+	       structopt *opt, FILE *o_log, str_quake_params *eq) ;
 void lsqenp_(int *nf, int *mp, int *mv, float *yl, float *x, float *b, int *ip, 
 	     int *ib, int *idvt, int *icon, int *iquit, int *iprnt) ;
 void sdr2mt(double *vm,double Mo,double strike,double dip,double rake) ;
-void inversion_dc(int nsac, sachdr *hd_synt, double ***G, double **d,
-		  double *sdrM0,double *rmsopt, structopt *opt, FILE *o_log);
+void inversion_dc(sachdr *hd_synt, double ***G, double **d,
+                  double *sdrM0,structopt *opt, FILE *o_log, str_quake_params *eq);
 void set_wgt(int ns, sachdr *hd_data,structopt *opt) ;
-void set_matrices (int *nsac, int *nsini, char ***sacfiles, sachdr **hd_synt, 
+void set_matrices (char ***sacfiles, sachdr **hd_synt, 
 		   double ***data, double ****G, structopt *opt, str_quake_params *eq, FILE *o_log) ;
 void calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm, 
 	       double **data, double ***d, structopt *opt, FILE *o_log);
@@ -145,11 +147,9 @@ void get_gap(sachdr *hd_synt, int ns, double *gap) ;
 int charplot(double *M, double s1, double d1, double s2, double d2, 
 	     char D, char P, char W, char B, char sep, char pnod, 
 	     int rx, int ry, FILE *stream) ;
-void output_products(structopt *opt, str_quake_params *eq, double s1a, double d1a, 
-		     double r1a, double s2a, double d2a, double r2a, double **TMa, 
-		     double *eval3a, double M0a, double M0_12a, double Mwa, 
-		     double *global_rms, double gap, double Cond, int nsac, 
-		     sachdr *hd_synt, FILE *o_log) ;
+void output_products(structopt *opt, str_quake_params *eq,
+		     sachdr *hd_synt, FILE *o_log, 
+                     char **argv) ;
 void prad_pat(double **TM, FILE *ps)               ;
 void pnod_pat(double *s1, double *d1, FILE *ps)    ;
 
@@ -161,10 +161,10 @@ void fast_synth_sub(double az, double baz, double xdeg, double *tv, double *dv, 
 		    str_quake_params *eq, sachdr *hdr, double **GFs, double *Z, double *TH, double *PH);
 
 void fast_synth_only_Z_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
-					  str_quake_params *eq, sachdr *hdr, double **GFs, double *Z);
+                           str_quake_params *eq, sachdr *hdr, double **GFs, double *Z);
 
 void fast_synth_only_Hs_sub(double az, double baz, double xdeg, double *tv, double *dv, int nd, 
-					   str_quake_params *eq, sachdr *hdr, double **GFs, double *TH, double *PH);
+                            str_quake_params *eq, sachdr *hdr, double **GFs, double *TH, double *PH);
 
 void distaz(double cmt_lat, double cmt_lon, float* stlats, float* stlons, 
 	    int nstat, float* dists, float* azs, float* bazs, float* xdegs,
@@ -177,25 +177,25 @@ void rotate_traces(double *T, double *P, float baz, int npts, double *S);
 int fill_kernel_G(sachdr *hd_GF,sachdr *hd_data,double Ptt,double twp_beg, 
 		  double twp_end,double *elem_disp,double *G,structopt *opt,FILE *o_log);
 
-void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,int nsac,char *itype,
-		int nd,double *dv,double *tv, double ***G,FILE *o_log);
+void calc_kernel(str_quake_params *eq,structopt *opt,sachdr *hd_synth,char *itype,
+		 int nd,double *dv,double *tv, double ***G,FILE *o_log);
 
 void copy_eq(str_quake_params *i_eq, str_quake_params *o_eq);
 
 void copy_opt(structopt *i_opt, structopt *o_opt,int nsac);
 
-void realloc_gridsearch(int nsac,double **rms,double *global_rms,double ***dcalc,int flag);
+void realloc_gridsearch(int nsac, double **rms, double *global_rms, 
+			double ***dcalc,int flag);
 
-void fast_ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_synt, 
-			double **data,double ***G,double ***dcalc,double **rms,double *global_rms, 
-			structopt *opt,str_quake_params *eq,double *tsopt, 
-			double *rmsopt, FILE *o_log);
+void fast_ts_gridsearch(int M,int nd,double *dv,double *tv,sachdr *hd_synt,double **data, 
+			double ***G,double ***dcalc,double **rms,structopt *opt,
+			str_quake_params *eq,double *tsopt,double *rmsopt, FILE *o_log);
 
 void ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_synt,double **data, 
 		   double *rmsini,structopt *opt,str_quake_params *eq,double *tsopt,
 		   double *rmsopt, FILE *o_log);
 
-void xy_gridsearch(int nsac,int M,int nd,double *dv,double *tv, sachdr *hd_synt,
-		   double **data,double ***G,double ***dcalc,double **rms,double *global_rms,
+void xy_gridsearch(int M,int nd,double *dv,double *tv, sachdr *hd_synt,
+		   double **data,double ***G,double ***dcalc,double **rms,
 		   structopt *opt,str_quake_params *eq,double *rmsopt, double *latopt,
 		   double *lonopt,double *depopt,FILE *o_log);

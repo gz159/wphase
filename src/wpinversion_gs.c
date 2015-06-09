@@ -73,9 +73,9 @@ int main(int argc, char *argv[])
 {
     int i, j, nsac, M, ierror ;
     int    nh = NDEPTHS, nd = NDISTAS ;
-    double s1, d1, r1, s2, d2, r2, gap, Cond ;
-    double latopt,lonopt,depopt,tsopt,rmsopt,M0,Mw,diplow,M0_12 ;
-    double *eval3, *global_rms, *data_norm, **TM, sdrM0[4] ;
+    double s2, d2, r2;
+    double latopt,lonopt,depopt,tsopt,rmsopt ;
+    double *eval3, *data_norm, **TM, sdrM0[4] ;
     double **data,  **rms, ***G = NULL, ***dcalc ;
     double *dv, *tv;
     char **sacfiles ;
@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
     structopt opt    ;
     sachdr *hd_synt  ;
     str_quake_params eq ;  
+
     /* Allocate memory for input parameters */
     eq.wp_win4  = double_alloc(4) ;
     eq.vm    = double_alloc2p(2)  ;
@@ -92,35 +93,43 @@ int main(int argc, char *argv[])
     eval3    = double_alloc(3)    ;
     dv       = double_alloc(nd)   ;
     tv       = double_alloc(nd)   ;
+
     /* Initialize some variables */
     data       = NULL ; G       = NULL ; opt.wgt = NULL ;
     opt.rms_in = NULL ; opt.p2p = NULL ; opt.avg = NULL ;
     sacfiles   = NULL ; o_tmp = NULL ; 
     ierror     = 1;
+
     /* Get input parameters */
     get_param1(argc,argv,&M,&opt,&eq) ;
     get_param2(opt.i_master,&opt,&eq) ;  
-    trav_time_init(nh,nd,eq.pde_evdp,dv,tv,&ierror) ;  
+    trav_time_init(nh,nd,eq.pde_evdp,dv,tv,&ierror) ;
+ 
+
     /* Write log header     */
     o_log = openfile_wt(opt.log)                     ;
     if (opt.dts_step <= 0. && opt.xy_dx <= 0.)
         o_tmp = o_log ;
     w_log_header(argv,&opt,&eq,eq.wp_win4,o_log) ;
+
     /* Set the data vector  */
     set_data_vector(nd,dv,tv,&nsac,&data,&sacfiles,&hd_synt,&eq,&opt,o_log);
+
     /* RMS per channel*/
-    data_norm = double_alloc(nsac);
-    calc_data_norm(data,hd_synt,nsac,data_norm);
+    data_norm = double_alloc(eq.nsac);
+    calc_data_norm(data,hd_synt,eq.nsac,data_norm);
+
     /* Compute G */
-    G    = double_alloc3p(nsac) ; /* Memory allocation for G */
-    for(i=0;i<nsac;i++)
+    G    = double_alloc3p(eq.nsac) ; /* Memory allocation for G */
+    for(i=0;i<eq.nsac;i++)
         G[i] = double_alloc2(NM,hd_synt[i].npts) ; 
-    calc_kernel(&eq,&opt,hd_synt,nsac,"l",nd,dv,tv,G,o_log);
+    calc_kernel(&eq,&opt,hd_synt,"l",nd,dv,tv,G,o_log);
+
     /* Inversion       */
-    global_rms = double_calloc(2*(opt.ref_flag+1)) ;
+    eq.global_rms = double_calloc(2*(opt.ref_flag+1)) ;
     if (opt.dc_flag) /* Double Couple inversion                 */
     {              /* WARNING: This has not been fully tested */
-        inversion(M,nsac,hd_synt,G,data,eq.vm[0],&Cond,&opt,NULL) ;
+        inversion(M,hd_synt,G,data,&opt,NULL,&eq) ;
         get_planes(eq.vm[0],TM,eval3,&sdrM0[0],&sdrM0[1],&sdrM0[2],&s2,&d2,&r2) ;
         sdrM0[3] = (fabs(eval3[0]) + fabs(eval3[2])) / 2.  ;
         for(i=0;i<opt.ip;i++)
@@ -128,34 +137,26 @@ int main(int argc, char *argv[])
         for(i=0;i<4;i++)
             opt.priorsdrM0[i]=sdrM0[i];
         fprintf(stderr,"WARNING: **** Double couple inversion have not been fully tested yet ****\n");
-        inversion_dc(nsac,hd_synt,G,data,sdrM0,global_rms,&opt,NULL) ;
+        inversion_dc(hd_synt,G,data,sdrM0,&opt,NULL,&eq) ;
         sdr2mt(eq.vm[0],sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2])         ;
     }
     else
-        inversion(M,nsac,hd_synt,G,data,eq.vm[0],&Cond,&opt,o_log) ;
+        inversion(M,hd_synt,G,data,&opt,o_log,&eq) ;
+
     /* Predicted data  */
-    dcalc = double_alloc3p(nsac) ;
-    calc_data(nsac,hd_synt,G,eq.vm,data,dcalc,&opt,o_tmp);
+    dcalc = double_alloc3p(eq.nsac) ;
+    calc_data(eq.nsac,hd_synt,G,eq.vm,data,dcalc,&opt,o_tmp);
+
     /* Get RMS and Gap */  
-    rms = double_calloc2(nsac, 2*(opt.ref_flag+1)) ;
-    calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt) ;
-    get_gap(hd_synt,nsac,&gap) ;
+    rms = double_calloc2(eq.nsac, 2*(opt.ref_flag+1)) ;
+    calc_rms(eq.nsac,hd_synt,data,dcalc,rms,eq.global_rms,&opt) ;
     if (opt.dts_step <= 0. && opt.xy_dx <= 0.)
     {
-        /* Set stike/dip/rake */      
-        get_planes(eq.vm[0],TM,eval3,&s1,&d1,&r1,&s2,&d2,&r2) ;
-        write_cmtf(opt.o_cmtf, &eq, eq.vm[0]) ;
-        /* Set Moment and Magnitude (Harvard Definition) */
-        M0     = ((fabs(eval3[0]) + fabs(eval3[2])) * (double)POW) / 2. ;
-        Mw     = (log10(M0) - 16.1) / 1.5 ;
-        diplow = d2 ;
-        if (d1 < d2) 
-            diplow = d1 ;
-        M0_12  = M0 * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ;
         /* Output */
-        w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt) ; 
-        output_products(&opt,&eq,s1,d1,r1,s2,d2,r2,TM,eval3,M0,M0_12,Mw, global_rms,gap,Cond,nsac,hd_synt,o_log) ;
+        w_o_saclst(eq.nsac,sacfiles,hd_synt,rms,data_norm,&opt) ; 
+        output_products(&opt,&eq,hd_synt,o_log,argv) ;
     }
+
     /* Time-shift grid search */
     if (opt.dts_step > 0.)
     {      
@@ -166,47 +167,39 @@ int main(int argc, char *argv[])
         strcpy(opt.o_covf,"ts_o_covariance")  ;
         if (opt.hdsafe)
         {
-            ts_gridsearch(nsac,M,nd,dv,tv,hd_synt,data,global_rms, &opt,&eq,&tsopt,&rmsopt,o_log);
+            ts_gridsearch(eq.nsac,M,nd,dv,tv,hd_synt,data,eq.global_rms,
+			&opt,&eq,&tsopt,&rmsopt,o_log);
             eq.ts = tsopt  ;      
             eq.hd = eq.ts ;
         }
         else
         {
-            fast_ts_gridsearch(nsac,M,nd,dv,tv,hd_synt,data,G,dcalc,rms,global_rms, &opt,&eq,&tsopt,&rmsopt,o_log);
+            fast_ts_gridsearch(M,nd,dv,tv,hd_synt,data,G,dcalc,rms,&opt,&eq,&tsopt,&rmsopt,o_log);
             opt.dts_val = 0.; /* Optimum solution */
             eq.ts += tsopt  ;      
             eq.hd = eq.ts ;
         }
-        realloc_gridsearch(nsac,rms,global_rms,dcalc,opt.ref_flag+1) ;
-          //save_G(G, nsac, hd_synt, "G_file_before");
-        calc_kernel(&eq,&opt,hd_synt,nsac,"l",nd,dv,tv,G,o_log) ;
-          //save_G(G, nsac, hd_synt, "G_file_after");
+        realloc_gridsearch(eq.nsac,rms,eq.global_rms,dcalc,opt.ref_flag+1) ;
+          //save_G(G, eq.nsac, hd_synt, "G_file_before");
+        calc_kernel(&eq,&opt,hd_synt,"l",nd,dv,tv,G,o_log) ;
+          //save_G(G, eq.nsac, hd_synt, "G_file_after");
         if (opt.dc_flag) /* Double Couple inversion                 */
         {              /* Warning: This has not been fully tested */
             for(i=0;i<4;i++)
                 sdrM0[i] = opt.priorsdrM0[i];         
-            inversion_dc(nsac,hd_synt,G,data,sdrM0,global_rms,&opt,o_log) ;
+            inversion_dc(hd_synt,G,data,sdrM0,&opt,o_log,&eq) ;
             sdr2mt(eq.vm[0],sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2])          ;
         }
         else
-            inversion(M,nsac,hd_synt,G,data,eq.vm[0],&Cond,&opt,o_log) ;
-        calc_data(nsac,hd_synt,G,eq.vm,data,dcalc,&opt,o_log) ;
-        calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt) ;
-        get_gap(hd_synt,nsac,&gap) ;
-        /* Set stike/dip/rake */
-        get_planes(eq.vm[0],TM,eval3,&s1,&d1,&r1,&s2,&d2,&r2) ;
-        write_cmtf(opt.o_cmtf, &eq, eq.vm[0]) ;
-        /* Set Moment and Magnitude (Harvard Definition) */
-        M0     = ((fabs(eval3[0]) + fabs(eval3[2])) * (double)POW) / 2. ;
-        Mw     = (log10(M0) - 16.1) / 1.5 ;
-        diplow = d2 ;
-        if (d1 < d2) 
-            diplow = d1 ;
-        M0_12  = M0 * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ;
+            inversion(M,hd_synt,G,data,&opt,o_log,&eq) ;
+        calc_data(eq.nsac,hd_synt,G,eq.vm,data,dcalc,&opt,o_log) ;
+        calc_rms(eq.nsac,hd_synt,data,dcalc,rms,eq.global_rms,&opt) ;
+
         /* Output */
-        w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt) ;
-        output_products(&opt,&eq,s1,d1,r1,s2,d2,r2,TM,eval3,M0,M0_12,Mw, global_rms,gap,Cond,nsac,hd_synt,o_log) ;
+        w_o_saclst(eq.nsac,sacfiles,hd_synt,rms,data_norm,&opt) ;
+        output_products(&opt,&eq,hd_synt,o_log,argv) ;
     }
+
     /* Centroid position Grid-search */
     if (opt.xy_dx > 0. || opt.dz > 0.)
     {
@@ -215,37 +208,27 @@ int main(int argc, char *argv[])
         strcpy(opt.p_data,"xy_fort.15")       ;
         strcpy(opt.o_covf,"xy_o_covariance")  ;
         strcpy(opt.o_saclst,"xy_o_wpinversion") ;
-        xy_gridsearch(nsac,M,nd,dv,tv,hd_synt,data,G,dcalc,rms,global_rms, &opt,&eq,&rmsopt,&latopt,&lonopt,&depopt,o_log) ;  
+        xy_gridsearch(M,nd,dv,tv,hd_synt,data,G,dcalc,rms,&opt,&eq,&rmsopt,&latopt,&lonopt,&depopt,o_log) ;  
         eq.evla = latopt ;
         eq.evlo = lonopt ;
         eq.evdp = depopt ;
-        realloc_gridsearch(nsac, rms, global_rms, dcalc, opt.ref_flag+1) ;
-        calc_kernel(&eq,&opt,hd_synt,nsac,"l",nd,dv,tv,G,o_log);
+        realloc_gridsearch(eq.nsac, rms, eq.global_rms, dcalc, opt.ref_flag+1) ;
+        calc_kernel(&eq,&opt,hd_synt,"l",nd,dv,tv,G,o_log);
         if (opt.dc_flag) /* Double Couple inversion                 */
         {              /* Warning: This has not been fully tested */
             for(i=0;i<4;i++)
                 sdrM0[i] = opt.priorsdrM0[i];         
-            inversion_dc(nsac,hd_synt,G,data,sdrM0,global_rms,&opt,o_log) ;
+            inversion_dc(hd_synt,G,data,sdrM0,&opt,o_log,&eq) ;
             sdr2mt(eq.vm[0],sdrM0[3],sdrM0[0],sdrM0[1],sdrM0[2])         ;
         }
         else
-            inversion(M,nsac,hd_synt,G,data,eq.vm[0],&Cond,&opt,o_log) ;
-        calc_data(nsac,hd_synt,G,eq.vm,data,dcalc,&opt,o_log) ;
-        calc_rms(nsac,hd_synt,data,dcalc,rms,global_rms,&opt) ;
-        get_gap(hd_synt,nsac,&gap) ;
-        /* Set stike/dip/rake */
-        get_planes(eq.vm[0],TM,eval3,&s1,&d1,&r1,&s2,&d2,&r2) ;
-        write_cmtf(opt.o_cmtf, &eq, eq.vm[0]) ;
-        /* Set Moment and Magnitude (Harvard Definition) */
-        M0     = ((fabs(eval3[0]) + fabs(eval3[2])) * (double)POW) / 2. ;
-        Mw     = (log10(M0) - 16.1) / 1.5 ;
-        diplow = d2 ;
-        if (d1 < d2) 
-            diplow = d1 ;
-        M0_12  = M0 * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ;
+            inversion(M,hd_synt,G,data,&opt,o_log,&eq) ;
+        calc_data(eq.nsac,hd_synt,G,eq.vm,data,dcalc,&opt,o_log) ;
+        calc_rms(eq.nsac,hd_synt,data,dcalc,rms,eq.global_rms,&opt) ;
+
         /* Output */
-        w_o_saclst(nsac,sacfiles,hd_synt,rms,data_norm,&opt) ;
-        output_products(&opt,&eq,s1,d1,r1,s2,d2,r2,TM,eval3,M0,M0_12,Mw, global_rms,gap,Cond,nsac,hd_synt,o_log) ;
+        w_o_saclst(eq.nsac,sacfiles,hd_synt,rms,data_norm,&opt) ;
+        output_products(&opt,&eq,hd_synt,o_log,argv) ;
     }
     fclose(o_log);
 
@@ -255,11 +238,10 @@ int main(int argc, char *argv[])
     free((void*)eq.vm[1])   ;
     free((void**)eq.vm)     ;
     free((void*)eval3)      ;
-    free((void*)global_rms) ;
     free((void*)data_norm)  ;
     free((void*)dv) ;
     free((void*)tv) ;
-    for(i=0 ; i<nsac ; i++)
+    for(i=0 ; i<eq.nsac ; i++)
     {
         free((void*)data[i])     ;
         free((void*)rms[i] )     ;
@@ -290,7 +272,7 @@ int main(int argc, char *argv[])
 void get_param2(char *file, structopt *opt, str_quake_params *eq)
 {
     int  i=0, nimas ;
-    char **keys     ;
+    char **keys     ; 
     if (strlen(eq->gf_dir) == 0)
     {
         nimas = 11;
