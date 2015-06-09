@@ -35,8 +35,8 @@
 #include <stdlib.h>
 
 #include "proto_alloc.h"    /* proto_alloc.c    */
-#include "rwtextfiles.h" /* rwtextfiles.c */
-#include "travel_times.h" /* rwtextfiles.c */
+#include "rwtextfiles.h"    /* rwtextfiles.c */
+#include "travel_times.h" 
 
 
 void make_table(char* name, char* table)
