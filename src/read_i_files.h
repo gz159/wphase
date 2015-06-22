@@ -49,6 +49,7 @@ typedef struct
   double *global_rms ;
   double Cond ;
   int nsac, nsini ;
+  double R_evla, R_evlo, R_evdp, R_ts, R_hd ;
 } struct_quake_params ;
 
 

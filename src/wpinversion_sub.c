@@ -65,12 +65,13 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     int    i,j,k=0,p,nb,nb2,size,*nbcmp  ;
     double M0a=0.,Mwa=0.,M0_12a=0.;
     double M0b=0.,Mwb=0.,M0_12b=0.,ma,mb,mc  ;
-    double s1a, d1a, r1a, s2a, d2a, r2a, gap, **TMa, *eval3a;
-    double s1b,s2b,d1b,d2b,r1b,r2b,tmp,scale ;
+    double strike1a, dip1a, rake1a, strike2a, dip2a, rake2a, gap, **TMa, *eval3a;
+    double strike1b,strike2b,dip1b,dip2b,rake1b,rake2b,tmp,scale ;
     double diplow,**TMb,*eval3b    ;
     int nbstations = 0;
     char   *buf,*buf2,**sta,**cmp  ;
     FILE   *ps,*o_bitmap           ;
+    char   gf_path[FSIZE];
 
     char   date_stmp[64] ;
     time_t now           ; 
@@ -84,6 +85,9 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     TMb    = NULL;
     eval3a = double_alloc(3);
     TMa    = double_alloc2(3,3);
+
+    if(getenv("GF_PATH")) 
+       strncpy(gf_path, getenv("GF_PATH"), FSIZE);
   
 
     /* Reference solution */
@@ -91,24 +95,25 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     {
         eval3b = double_alloc(3)  ;
         TMb = double_alloc2(3,3) ;
-        get_planes(eq->vm[1], TMb, eval3b, &s1b,&d1b,&r1b, &s2b,&d2b,&r2b) ;
+        get_planes(eq->vm[1], TMb, eval3b, &strike1b,&dip1b,&rake1b, &strike2b,&dip2b,&rake2b) ;
         M0b = ((fabs(eval3b[0]) + fabs(eval3b[2])) * (double)POW) / 2. ; 
         Mwb = (log10(M0b) - 16.1) / 1.5 ;
         residual_moment(eq->vm, &ma, &mb, &mc) ;
     }
 
     /* Set stike/dip/rake */
-    get_planes(eq->vm[0], TMa, eval3a, &s1a,&d1a,&r1a, &s2a,&d2a,&r2a);
+    get_planes(eq->vm[0], TMa, eval3a, &strike1a,&dip1a,&rake1a, &strike2a,&dip2a,&rake2a);
     write_cmtf(opt->o_cmtf, eq, eq->vm[0]);  
 
     /* Set Moment and Magnitude (Harvard Definition) */
     M0a     = ((fabs(eval3a[0]) + fabs(eval3a[2])) * (double)POW) / 2.; 
     Mwa     = (log10(M0a) - 16.1) / 1.5;
-    diplow = d2a;
-    if (d1a < d2a) 
-        diplow = d1a;
+    diplow = dip2a;
+    if (dip1a < dip2a) 
+        diplow = dip1a;
     M0_12a  = M0a * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD);
     get_gap(hd_synt, eq->nsac, &gap);
+
 
     /* PS FILE */
     if (opt->ps)
@@ -123,8 +128,8 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
             tmp=0.5;
         fprintf(ps,"%5.2f %5.2f translate\n",1.1-tmp,0.12+tmp/10.0) ;
         prad_pat(TMa, ps) ;
-        pnod_pat(&s1a,&d1a,ps) ;
-        pnod_pat(&s2a,&d2a,ps) ;
+        pnod_pat(&strike1a,&dip1a,ps) ;
+        pnod_pat(&strike2a,&dip2a,ps) ;
         fprintf(ps,"/Times-Roman findfont .12 scalefont setfont\n") ;
         fprintf(ps, "%15.6f %15.6f moveto\n", -0.50, -1.13) ;
         fprintf(ps,"(WCMT, Mw= %5.2f ) show\n", Mwa) ;
@@ -174,16 +179,16 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
         if (opt->ref_flag) 
         {          
             fprintf(ps,"(WCMT: %7.1f/%5.1f/%7.1f   %7.1f/%5.1f/%7.1f) show\n",
-                            s1a,d1a,r1a,s2a,d2a,r2a) ;           
+                            strike1a,dip1a,rake1a,strike2a,dip2a,rake2a) ;           
             fprintf(ps,"%15.6f %15.6f moveto\n",0.5, -1.75) ;
             fprintf(ps,"(RCMT : %7.1f/%5.1f/%7.1f   %7.1f/%5.1f/%7.1f) show\n",
-                            s1b,d1b,r1b,s2b,d2b,r2b) ;
+                            strike1b,dip1b,rake1b,strike2b,dip2b,rake2b) ;
         }
         else
         {
-            fprintf(ps,"(NP1: %7.1f/%5.1f/%7.1f) show\n",s1a,d1a,r1a);
+            fprintf(ps,"(NP1: %7.1f/%5.1f/%7.1f) show\n",strike1a,dip1a,rake1a);
             fprintf(ps,"%15.6f %15.6f moveto\n", 0.5, -1.75) ;
-            fprintf(ps,"(NP2: %7.1f/%5.1f/%7.1f) show\n",s2a,d2a,r2a);
+            fprintf(ps,"(NP2: %7.1f/%5.1f/%7.1f) show\n",strike2a,dip2a,rake2a);
         }
         fprintf(ps,"%15.6f %15.6f moveto\n", -1., -1.9) ;
         fprintf(ps,"(Eigenvalues [dyn-cm x 1e%d]:%14.4f %14.4f %14.4f       (Mw = %4.2f)) show\n",
@@ -341,8 +346,8 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
             fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/M0a,mc) ;
             fprintf(ps,".5 .5 .9 setrgbcolor\n") ;
             prad_pat(TMb, ps)        ;
-            pnod_pat(&s1b, &d1b, ps) ;
-            pnod_pat(&s2b, &d2b, ps) ;
+            pnod_pat(&strike1b, &dip1b, ps) ;
+            pnod_pat(&strike2b, &dip2b, ps) ;
         }
      
         fprintf(ps,"showpage\n") ;
@@ -350,7 +355,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     }
 
     /* STDOUT AND LOG */
-    charplot(eq->vm[0],s1a,d1a,s2a,d2a, '-', '#', ' ', '\0','\0','\0', RX, RY, stdout)  ;
+    charplot(eq->vm[0],strike1a,dip1a,strike2a,dip2a, '-', '#', ' ', '\0','\0','\0', RX, RY, stdout)  ;
     printf("CMT: ") ;
     for(i =0 ; i<NM ; i++)
         printf("%15.4e",eq->vm[0][i]);
@@ -359,7 +364,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     else
         printf("\nBest n");
     printf("odal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",
-                   s1a,d1a,r1a,s2a,d2a,r2a);
+                   strike1a,dip1a,rake1a,strike2a,dip2a,rake2a);
     printf("Eigenvalues: %-12.5f %-12.5f %-12.5f\n", eval3a[0], eval3a[1], eval3a[2]) ;
     if (opt->dc_flag)
         printf("WCMT: RMS = %-9.5f mm (%-6.3f) Gap: %-6.1f deg\n",
@@ -370,9 +375,9 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     if (opt->ref_flag) 
     { 
         printf("RCMT: RMS = %-9.5f mm (%-6.3f)\n", 1000.*eq->global_rms[2], eq->global_rms[2]/eq->global_rms[3])  ;      
-        diplow = d2b ;
-        if (d1b < d2b)
-                  diplow = d1b ;
+        diplow = dip2b ;
+        if (dip1b < dip2b)
+                  diplow = dip1b ;
         M0_12b = M0b * sin(2.*diplow*(double)DEG2RAD) / sin(24.*(double)DEG2RAD) ; 
     }
     printf("Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",Mwa,M0a,M0_12a) ;
@@ -384,7 +389,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
         fprintf(o_log,"%15.4e",eq->vm[0][i]);
     fprintf(o_log,"\nCond_number:        %-10.0f\n",eq->Cond) ; 
     fprintf(o_log,"W_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",
-                    s1a,d1a,r1a,s2a,d2a,r2a) ;
+                    strike1a,dip1a,rake1a,strike2a,dip2a,rake2a) ;
     fprintf(o_log,"W_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3a[0], eval3a[1], eval3a[2]) ;
     fprintf(o_log,"W_cmt_err:          %-12.8f %-12.8f\n", 1000.*eq->global_rms[0], eq->global_rms[0]/eq->global_rms[1])    ;
     fprintf(o_log,"Wmag: %-5.2f ; Wmom %-15.4e ; Wmom_12 %-15.4e\n",Mwa,M0a,M0_12a) ;
@@ -393,7 +398,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     {
         printf("Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b) ;
         printf("ratio = %5.2f ;  epsilon = %6.3f\n",M0b/M0a,mc) ;
-        fprintf(o_log,"R_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",s1b,d1b,r1b, s2b,d2b,r2b) ;
+        fprintf(o_log,"R_bestnodal planes: %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f %-8.1f\n",strike1b,dip1b,rake1b, strike2b,dip2b,rake2b) ;
         fprintf(o_log,"R_eigenvalues:      %-12.5f %-12.5f %-12.5f\n", eval3b[0], eval3b[1], eval3b[2])           ;
         fprintf(o_log,"R_cmt_err:          %-12.8f %-12.8f\n", 1000.*eq->global_rms[2], eq->global_rms[2]/eq->global_rms[3])  ;
         fprintf(o_log,"Rmag: %-5.2f ; Rmom %-15.4e ; Rmom_12 %-15.4e\n",Mwb,M0b,M0_12b)                           ;
@@ -406,7 +411,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
         size = 401 ;
         o_bitmap = openfile_wt(opt->wpbmfile)  ;
         fprintf(o_bitmap, "P2\n#WPinversion focal mechanism\n%d %d\n9\n", size, size)                             ;
-        charplot(eq->vm[0],s1a,d1a,s2a,d2a,'9', '3', '9', '0',' ', '0', (size-1)/2,(size-1)/2, o_bitmap)  ;
+        charplot(eq->vm[0],strike1a,dip1a,strike2a,dip2a,'9', '3', '9', '0',' ', '0', (size-1)/2,(size-1)/2, o_bitmap)  ;
         fclose(o_bitmap) ;
     }
 
@@ -414,144 +419,169 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     {
         o_bitmap = openfile_wt(opt->refbmfile) ;
         fprintf(o_bitmap, "P2\n#WPinversion focal mechanism\n%d %d\n9\n", size, size)                         ;
-        charplot(eq->vm[1], s1b, d1b, s2b, d2b,'9', '3', '9', '0',' ', '0', (size-1)/2,(size-1)/2, o_bitmap)  ;
+        charplot(eq->vm[1], strike1b, dip1b, strike2b, dip2b,'9', '3', '9', '0',' ', '0', (size-1)/2,(size-1)/2, o_bitmap)  ;
         fclose(o_bitmap)                       ; 
     }
 
 
     /* INI OUTPUT */
     /* ************************* */
-
-    FILE * testfile = fopen("test.ini", "a");
+    FILE * o_ini;
+    if (strcmp(opt->gs_flag, "ts") == 0)
+        o_ini = fopen(opt->inifile, "w");
+    else
+        o_ini = fopen(opt->inifile, "a");
     if (opt->med_val ==1)
-        fprintf(testfile, "\n\n\n[wp_med]\n");
+        fprintf(o_ini, "\n\n\n[wp_med]\n");
     if (opt->th_val > 0.)
-        fprintf(testfile, "\n\n\n[wp_th%.2f]\n", opt->th_val);
-    if (opt->ts_Nit > 0.)
-        fprintf(testfile, "\n\n\n[wp_ts]\n");
-    if (opt->dz > 0.)
-        fprintf(testfile, "\n\n\n[wp_z]\n");
-    else if (opt->xy_Nit > 0.)
-        fprintf(testfile, "\n\n\n[wp_xy]\n");
-    fprintf(testfile, "code_version         = %-d\n", VERSION);
+        fprintf(o_ini, "\n\n\n[wp_th%.2f]\n", opt->th_val);
+
+    if (strcmp(opt->gs_flag, "ts") == 0)
+        fprintf(o_ini, "[wp_ts]\n");       
+    else if (strcmp(opt->gs_flag, "xy") == 0)
+    {
+        if (opt->dz > 0.)
+            fprintf(o_ini, "\n\n\n[wp_z]\n");
+        else
+            fprintf(o_ini, "\n\n\n[wp_xy]\n");
+    }
+        
+    fprintf(o_ini, "code_version         = %-d\n", VERSION);
+    fprintf(o_ini, "eventid              = %-s\n", eq->evid);
+    fprintf(o_ini, "GF_PATH              = %-s\n", gf_path);
 
     // COMMENTS
+    fprintf(o_ini, "\n;comments\n");
+    fprintf(o_ini, "nb_comments          = %d\n", opt->ncom);
     if (opt->ncom !=0)
     {
-        fprintf(testfile, "\n;comments\n");
         for(i=0;i<opt->ncom;i++)
         {
-            fprintf(testfile, "Comment%d             = %-s\n", i, opt->comments[i]) ;
+            fprintf(o_ini, "Comment%d             = %-s\n", i, opt->comments[i]) ;
         }
     }
+
+    // EPICENTER
+    fprintf(o_ini, "\n;epicenter\n");
+    fprintf(o_ini, "EPI_agency           = %-s\n",    strndup(eq->pdeline, 5));
+    fprintf(o_ini, "EPI_year             = %4d\n",    atoi(strndup(eq->pdeline + 5, 4)));
+    fprintf(o_ini, "EPI_month            = %4d\n",    atoi(strndup(eq->pdeline + 10, 2)));
+    fprintf(o_ini, "EPI_day              = %4d\n",    atoi(strndup(eq->pdeline + 13, 2)));
+    fprintf(o_ini, "EPI_hour             = %4d\n",    atoi(strndup(eq->pdeline + 16, 2)));
+    fprintf(o_ini, "EPI_minute           = %4d\n",    atoi(strndup(eq->pdeline + 19, 2)));
+    fprintf(o_ini, "EPI_second           = %7.2f\n",  atof(strndup(eq->pdeline + 22, 5)));
+    fprintf(o_ini, "EPI_latitude         = %+9.4f\n", atof(strndup(eq->pdeline + 28, 8)));
+    fprintf(o_ini, "EPI_longitude        = %+9.4f\n", atof(strndup(eq->pdeline + 37, 9)));
+    fprintf(o_ini, "EPI_depth            = %6.1f\n",  atof(strndup(eq->pdeline + 47, 5)));
+    fprintf(o_ini, "EPI_M1               = %6.1f\n",  atof(strndup(eq->pdeline + 53, 3)));
+    fprintf(o_ini, "EPI_M2               = %6.1f\n",  atof(strndup(eq->pdeline + 57, 3)));
+    fprintf(o_ini, "EPI_region           = %-s\n",    strndup(eq->pdeline + 61, 20));
+
     // CENTROID MOMENT TENSOR WCMT
-    fprintf(testfile, "\n;centroid_moment_tensor_WCMT\n");
-    fprintf(testfile, "Mrr                  = %+14.6e\n", eq->vm[0][0]*(double)POW);
-    fprintf(testfile, "Mtt                  = %+14.6e\n", eq->vm[0][1]*(double)POW);
-    fprintf(testfile, "Mpp                  = %+14.6e\n", eq->vm[0][2]*(double)POW);
-    fprintf(testfile, "Mrt                  = %+14.6e\n", eq->vm[0][3]*(double)POW);
-    fprintf(testfile, "Mrp                  = %+14.6e\n", eq->vm[0][4]*(double)POW);
-    fprintf(testfile, "Mtp                  = %+14.6e\n", eq->vm[0][5]*(double)POW);
-
-    fprintf(testfile, "EPI_agency           = %-s\n",    strndup(eq->pdeline, 5));
-    fprintf(testfile, "EPI_year             = %4d\n",    atoi(strndup(eq->pdeline + 5, 4)));
-    fprintf(testfile, "EPI_month            = %4d\n",    atoi(strndup(eq->pdeline + 10, 2)));
-    fprintf(testfile, "EPI_day              = %4d\n",    atoi(strndup(eq->pdeline + 13, 2)));
-    fprintf(testfile, "EPI_hour             = %4d\n",    atoi(strndup(eq->pdeline + 16, 2)));
-    fprintf(testfile, "EPI_minute           = %4d\n",    atoi(strndup(eq->pdeline + 19, 2)));
-    fprintf(testfile, "EPI_second           = %7.2f\n",  atof(strndup(eq->pdeline + 22, 5)));
-    fprintf(testfile, "EPI_latitude         = %+9.4f\n", atof(strndup(eq->pdeline + 28, 8)));
-    fprintf(testfile, "EPI_longitude        = %+9.4f\n", atof(strndup(eq->pdeline + 37, 9)));
-    fprintf(testfile, "EPI_depth            = %6.1f\n",  atof(strndup(eq->pdeline + 47, 5)));
-    fprintf(testfile, "EPI_M1               = %6.1f\n",  atof(strndup(eq->pdeline + 53, 3)));
-    fprintf(testfile, "EPI_M2               = %6.1f\n",  atof(strndup(eq->pdeline + 57, 3)));
-    fprintf(testfile, "EPI_region           = %-s\n",    strndup(eq->pdeline + 61, 20));
-
-    fprintf(testfile, "eventid              = %-s\n",    eq->evid);
-    fprintf(testfile, "time_shift           = %8.2f\n",  eq->ts);
-    fprintf(testfile, "half_duration        = %8.2f\n",  eq->hd);
-    fprintf(testfile, "latitude             = %8.2f\n",  eq->evla);
-    fprintf(testfile, "longitude            = %8.2f\n",  eq->evlo);
-    fprintf(testfile, "depth                = %8.2f\n",  eq->evdp);
-    fprintf(testfile, "WM0                  = %12.2e\n", M0a);
-    fprintf(testfile, "WMw                  = %7.2f\n",  Mwa);
-    //fprintf(testfile, "W_mom_12             = %-15.4e\n", M0_12a);
+    fprintf(o_ini, "\n;centroid_moment_tensor_WCMT\n");
+    fprintf(o_ini, "W_Mrr                = %+14.6e\n", eq->vm[0][0]*(double)POW);
+    fprintf(o_ini, "W_Mtt                = %+14.6e\n", eq->vm[0][1]*(double)POW);
+    fprintf(o_ini, "W_Mpp                = %+14.6e\n", eq->vm[0][2]*(double)POW);
+    fprintf(o_ini, "W_Mrt                = %+14.6e\n", eq->vm[0][3]*(double)POW);
+    fprintf(o_ini, "W_Mrp                = %+14.6e\n", eq->vm[0][4]*(double)POW);
+    fprintf(o_ini, "W_Mtp                = %+14.6e\n", eq->vm[0][5]*(double)POW);
+    fprintf(o_ini, "W_time_shift         = %8.2f\n",  eq->ts);
+    fprintf(o_ini, "W_half_duration      = %8.2f\n",  eq->hd);
+    fprintf(o_ini, "W_latitude           = %8.2f\n",  eq->evla);
+    fprintf(o_ini, "W_longitude          = %8.2f\n",  eq->evlo);
+    fprintf(o_ini, "W_depth              = %8.2f\n",  eq->evdp);
+    fprintf(o_ini, "W_M0                 = %12.2e\n", M0a);
+    fprintf(o_ini, "W_Mw                 = %7.2f\n",  Mwa);
+    //fprintf(o_ini, "W_mom_12             = %-15.4e\n", M0_12a);
 
 
     // BEST NODAL PLANES WCMT
     if (opt->dc_flag)
     {
-        fprintf(testfile, "DC_FLAG              = True\n");
-        fprintf(testfile, "\n;n");
+        fprintf(o_ini, "DC_FLAG              = True\n");
+        fprintf(o_ini, "\n;n");
     }
     else
     {
-        fprintf(testfile, "DC_FLAG              = False\n");
-        fprintf(testfile, "\n;best_n");
+        fprintf(o_ini, "DC_FLAG              = False\n");
+        fprintf(o_ini, "\n;best_n");
     }
-    fprintf(testfile, "odal planes_WCMT\n");
-    fprintf(testfile, "W_NP1_strike         = %7.1f\n", s1a);
-    fprintf(testfile, "W_NP1_dip            = %7.1f\n", d1a);
-    fprintf(testfile, "W_NP1_rake           = %7.1f\n", r1a);
-    fprintf(testfile, "W_NP2_strike         = %7.1f\n", s2a);
-    fprintf(testfile, "W_NP2_dip            = %7.1f\n", d2a);
-    fprintf(testfile, "W_NP2_rake           = %7.1f\n", r2a);
+    fprintf(o_ini, "odal planes_WCMT\n");
+    fprintf(o_ini, "W_NP1_strike         = %7.1f\n", strike1a);
+    fprintf(o_ini, "W_NP1_dip            = %7.1f\n", dip1a);
+    fprintf(o_ini, "W_NP1_rake           = %7.1f\n", rake1a);
+    fprintf(o_ini, "W_NP2_strike         = %7.1f\n", strike2a);
+    fprintf(o_ini, "W_NP2_dip            = %7.1f\n", dip2a);
+    fprintf(o_ini, "W_NP2_rake           = %7.1f\n", rake2a);
 
     // EIGENVALUES WCMT
-    fprintf(testfile, "\n;eigenvalues_WCMT\n");
-    fprintf(testfile, "M_eig1               = %14.4f\n", eval3a[0]);
-    fprintf(testfile, "M_eig2               = %14.4f\n", eval3a[1]);
-    fprintf(testfile, "M_eig3               = %14.4f\n", eval3a[2]);
+    fprintf(o_ini, "\n;eigenvalues_WCMT\n");
+    fprintf(o_ini, "W_eig1               = %14.4f\n", eval3a[0]);
+    fprintf(o_ini, "W_eig2               = %14.4f\n", eval3a[1]);
+    fprintf(o_ini, "W_eig3               = %14.4f\n", eval3a[2]);
 
-    // CENTROID MOMENT TENSOR RCMT
-    fprintf(testfile, "\n;centroid_moment_tensor_RCMT\n");
+    
     if(opt->ref_flag)
-    {
-        fprintf(testfile, "R_eig1               = %14.4f\n", eval3b[0]);
-        fprintf(testfile, "R_eig2               = %14.4f\n", eval3b[1]);
-        fprintf(testfile, "R_eig3               = %14.4f\n", eval3b[2]);   
-        fprintf(testfile, "R_mag                = %5.2f\n",  Mwb);
-        fprintf(testfile, "R_mom                = %15.4e\n", M0b);
-        fprintf(testfile, "R_mom_12             = %15.4e\n", M0_12b);
-        fprintf(testfile, "ratio                = %5.2f\n",  M0b/M0a);
-        fprintf(testfile, "epsilon              = %6.3f\n",  mc);
+    {  
+        // CENTROID MOMENT TENSOR RCMT
+        fprintf(o_ini, "\n;centroid_moment_tensor_RCMT\n");
+        fprintf(o_ini, "R_Mrr                = %+14.6e\n", eq->vm[1][0]*(double)POW);
+        fprintf(o_ini, "R_Mtt                = %+14.6e\n", eq->vm[1][1]*(double)POW);
+        fprintf(o_ini, "R_Mpp                = %+14.6e\n", eq->vm[1][2]*(double)POW);
+        fprintf(o_ini, "R_Mrt                = %+14.6e\n", eq->vm[1][3]*(double)POW);
+        fprintf(o_ini, "R_Mrp                = %+14.6e\n", eq->vm[1][4]*(double)POW);
+        fprintf(o_ini, "R_Mtp                = %+14.6e\n", eq->vm[1][5]*(double)POW);
+        fprintf(o_ini, "R_time_shift         = %8.2f\n",  eq->R_ts);
+        fprintf(o_ini, "R_half_duration      = %8.2f\n",  eq->R_hd);
+        fprintf(o_ini, "R_latitude           = %8.2f\n",  eq->R_evla);
+        fprintf(o_ini, "R_longitude          = %8.2f\n",  eq->R_evlo);
+        fprintf(o_ini, "R_depth              = %8.2f\n",  eq->R_evdp);
+        fprintf(o_ini, "R_M0                 = %15.4e\n", M0b);
+        fprintf(o_ini, "R_Mw                 = %5.2f\n",  Mwb);
+        //fprintf(o_ini, "R_mom_12             = %15.4e\n", M0_12b);
+        fprintf(o_ini, "ratio                = %5.2f\n",  M0b/M0a);
+        fprintf(o_ini, "epsilon              = %6.3f\n",  mc);
+
+        // BEST NODAL PLANES RCMT
+        if (opt->dc_flag)
+            fprintf(o_ini, "\n;n");
+        else
+            fprintf(o_ini, "\n;best_n");
+        fprintf(o_ini, "odal planes_RCMT\n");
+        fprintf(o_ini, "R_NP1_strike         = %7.1f\n", strike1b);
+        fprintf(o_ini, "R_NP1_dip            = %7.1f\n", dip1b);
+        fprintf(o_ini, "R_NP1_rake           = %7.1f\n", rake1b);
+        fprintf(o_ini, "R_NP2_strike         = %7.1f\n", strike2b);
+        fprintf(o_ini, "R_NP2_dip            = %7.1f\n", dip2b);
+        fprintf(o_ini, "R_NP2_rake           = %7.1f\n", rake2b);
+
+        // EIGENVALUES RCMT
+        fprintf(o_ini, "\n;eigenvalues_RCMT\n");
+        fprintf(o_ini, "R_eig1               = %14.4f\n", eval3b[0]);
+        fprintf(o_ini, "R_eig2               = %14.4f\n", eval3b[1]);
+        fprintf(o_ini, "R_eig3               = %14.4f\n", eval3b[2]); 
     }
 
-    // BEST NODAL PLANES RCMT
-    if (opt->ref_flag) 
-    {          
-        if (opt->dc_flag)
-            fprintf(testfile, "\n;n");
-        else
-            fprintf(testfile, "\n;best_n");
-        fprintf(testfile, "odal planes_RCMT\n");
-        fprintf(testfile, "R_NP1_strike         = %7.1f\n", s1b);
-        fprintf(testfile, "R_NP1_dip            = %7.1f\n", d1b);
-        fprintf(testfile, "R_NP1_rake           = %7.1f\n", r1b);
-        fprintf(testfile, "R_NP2_strike         = %7.1f\n", s2b);
-        fprintf(testfile, "R_NP2_dip            = %7.1f\n", d2b);
-        fprintf(testfile, "R_NP2_rake           = %7.1f\n", r2b);
-    }
 
     // FILTER PARAMETERS
-    fprintf(testfile, "\n;filter_parameters\n");
-    fprintf(testfile, "filt_order           = %1d\n",   eq->filtorder);
-    fprintf(testfile, "filt_cf1             = %7.5f\n", eq->flow);
-    fprintf(testfile, "filt_cf2             = %7.5f\n", eq->fhigh);
-    fprintf(testfile, "filt_pass            = %1d\n",   eq->filtnpass);
+    fprintf(o_ini, "\n;filter_parameters\n");
+    fprintf(o_ini, "filt_order           = %1d\n",   eq->filtorder);
+    fprintf(o_ini, "filt_cf1             = %7.5f\n", eq->flow);
+    fprintf(o_ini, "filt_cf2             = %7.5f\n", eq->fhigh);
+    fprintf(o_ini, "filt_pass            = %1d\n",   eq->filtnpass);
 
     // SCREENING PARAMETERS
-    fprintf(testfile, "\n;screening_parameters\n");
+    fprintf(o_ini, "\n;screening_parameters\n");
     if (opt->med_val ==1)
     {
-        fprintf(testfile, "med_val              = %15.8e\n",        opt->med_val);
-        fprintf(testfile, "p2p_med              = %15.8e\n",        opt->p2p_med);
-        fprintf(testfile, "p2p_min              = %15.8e\n", 0.1 * (opt->p2p_med));
-        fprintf(testfile, "p2p_max              = %15.8e\n", 3.0 * (opt->p2p_med));
-        fprintf(testfile, "average              = %15.8e\n",        opt->p2p_med/2); 
+        fprintf(o_ini, "med_val              = %15.8e\n",        opt->med_val);
+        fprintf(o_ini, "p2p_med              = %15.8e\n",        opt->p2p_med);
+        fprintf(o_ini, "p2p_min              = %15.8e\n", 0.1 * (opt->p2p_med));
+        fprintf(o_ini, "p2p_max              = %15.8e\n", 3.0 * (opt->p2p_med));
+        fprintf(o_ini, "average              = %15.8e\n",        opt->p2p_med/2); 
     }
     else
-        fprintf(testfile, "; (None)\n");
+        fprintf(o_ini, "; (None)\n");
 
     // USED DATA
 
@@ -575,42 +605,42 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     }
     /* end concatenation */
 
-    fprintf(testfile, "\n;used_data\n");
-    fprintf(testfile, "nb_stations          = %4d\n", nbstations);
-    fprintf(testfile, "nb_channels          = %4d\n", eq->nsac);
-    fprintf(testfile, "nb_rejected_channels = %4d\n", eq->nsini-eq->nsac);
-    fprintf(testfile, "stations             = %s\n", str_stations);
-    fprintf(testfile, "WPWIN                = %8.2f %8.2f %8.2f %8.2f\n", eq->wp_win4[0], eq->wp_win4[1], eq->wp_win4[2], eq->wp_win4[3]);
-    fprintf(testfile, "Dmin                 = %8.2f\n", opt->dmin);
-    fprintf(testfile, "Dmax                 = %8.2f\n", opt->dmax);
-    fprintf(testfile, "wN                   = %8.2f\n", opt->wN);
-    fprintf(testfile, "wE                   = %8.2f\n", opt->wE);
-    fprintf(testfile, "wZ                   = %8.2f\n", opt->wZ);
+    fprintf(o_ini, "\n;used_data\n");
+    fprintf(o_ini, "nb_stations          = %4d\n", nbstations);
+    fprintf(o_ini, "nb_channels          = %4d\n", eq->nsac);
+    fprintf(o_ini, "nb_rejected_channels = %4d\n", eq->nsini-eq->nsac);
+    fprintf(o_ini, "stations             = %s\n", str_stations);
+    fprintf(o_ini, "WPWIN                = %8.2f %8.2f %8.2f %8.2f\n", eq->wp_win4[0], eq->wp_win4[1], eq->wp_win4[2], eq->wp_win4[3]);
+    fprintf(o_ini, "Dmin                 = %8.2f\n", opt->dmin);
+    fprintf(o_ini, "Dmax                 = %8.2f\n", opt->dmax);
+    fprintf(o_ini, "wN                   = %8.2f\n", opt->wN);
+    fprintf(o_ini, "wE                   = %8.2f\n", opt->wE);
+    fprintf(o_ini, "wZ                   = %8.2f\n", opt->wZ);
 
     // INVERSION PARAMETERS
-    fprintf(testfile, "\n;inversion_parameters\n");
-    fprintf(testfile, "command_line         = %-s\n", argv[0]);
-    fprintf(testfile, "ref_solution         = %-s\n", eq->cmtfile);
-    fprintf(testfile, "cond_thre            = %8.3f\n", opt->cth_val);
-    fprintf(testfile, "damp_fac             = %8.3f\n", opt->df_val);
+    fprintf(o_ini, "\n;inversion_parameters\n");
+    fprintf(o_ini, "command_line         = %-s\n", argv[0]);
+    fprintf(o_ini, "ref_solution         = %-s\n", eq->cmtfile);
+    fprintf(o_ini, "cond_thre            = %8.3f\n", opt->cth_val);
+    fprintf(o_ini, "damp_fac             = %8.3f\n", opt->df_val);
     if (opt->th_val > 0)
     {
-        fprintf(testfile, "rms_threshold        = %-f\n", opt->th_val);
+        fprintf(o_ini, "rms_threshold        = %-f\n", opt->th_val);
     }
 
     // QUALITY CONTROL
-    fprintf(testfile, "\n;QC\n");
-    fprintf(testfile, "WRMS                 = %9.5f\n", 1000.*eq->global_rms[0]);
-    fprintf(testfile, "WRMS_r               = %6.3f\n", eq->global_rms[0]/eq->global_rms[1]);
-    fprintf(testfile, "Gap                  = %5.1f\n", gap);
+    fprintf(o_ini, "\n;QC\n");
+    fprintf(o_ini, "WRMS                 = %9.5f\n", 1000.*eq->global_rms[0]);
+    fprintf(o_ini, "WRMS_r               = %9.5f\n", eq->global_rms[0]/eq->global_rms[1]);
+    fprintf(o_ini, "Gap                  = %5.1f\n", gap);
     if (opt->dc_flag == 0)
-        fprintf(testfile, "Cond_number          = ---\n");
+        fprintf(o_ini, "Cond_number          = ---\n");
     else
-        fprintf(testfile, "Cond_number          = %10.1f\n", eq->Cond); 
+        fprintf(o_ini, "Cond_number          = %10.1f\n", eq->Cond); 
     if (opt->ref_flag) 
     {
-        fprintf(testfile, "RRMS                 = %9.5f\n", 1000.*eq->global_rms[2]);
-        fprintf(testfile, "RRMS_r               = %9.5f\n", eq->global_rms[2]/eq->global_rms[3]); 
+        fprintf(o_ini, "RRMS                 = %9.5f\n", 1000.*eq->global_rms[2]);
+        fprintf(o_ini, "RRMS_r               = %9.5f\n", eq->global_rms[2]/eq->global_rms[3]); 
     }
     // concatenate all G_eigenvalues in a string
 /*
@@ -624,13 +654,13 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
         strcat(str_G_eig, Gtemp);
     }
     // end concatenation
-    fprintf(testfile, "G_eigenvalues        = %s\n", *str_G_eig);
+    fprintf(o_ini, "G_eigenvalues        = %s\n", *str_G_eig);
 */
 
-
+       
     /* ************************* */
     /* END INI OUTPUT */
-
+    fclose(o_ini);
     /* Memory Freeing */
     if (opt->ref_flag)
     {
@@ -709,11 +739,11 @@ void prad_pat(double **TM, FILE *ps)
 /* Input: s: strike (pointer)          */
 /*        d: dip (pointer)             */
 /*        ps: ps FILE stream           */
-void pnod_pat(double *s, double *d, FILE *ps)
+void pnod_pat(double *strike, double *dip, FILE *ps)
 {
     fprintf(ps,"newpath\n" )                ;
-    fprintf(ps, "/phi %6.1f def\n", (*s))     ;
-    fprintf(ps,"/delta %6.1f def\n", (*d))     ;
+    fprintf(ps, "/phi %6.1f def\n", (*strike))     ;
+    fprintf(ps,"/delta %6.1f def\n", (*dip))     ;
     fprintf(ps,"phi sin phi cos moveto\n")  ;
     fprintf(ps,"0 1 180\n")                 ;
     fprintf(ps,"{/alpha exch def\n")        ;
@@ -1420,7 +1450,7 @@ void set_mt(double *vm, double **TM)
     TM[2][1] = TM[1][2] ;
 }
   
-void get_planes(double *vm, double **TM, double *eval3, double *s1,double *d1,double *r1, double *s2,double *d2,double *r2)
+void get_planes(double *vm, double **TM, double *eval3, double *strike1,double *dip1,double *rake1, double *strike2,double *dip2,double *rake2)
 {
     int    nrot, i ;
     double si, co  ;
@@ -1472,11 +1502,11 @@ void get_planes(double *vm, double **TM, double *eval3, double *s1,double *d1,do
             vs[i] = -vs[i] ;
         }
     
-    *s1 = atan2(-vn[0], vn[1]) ;
-    *d1 = acos(-vn[2]) ;
-    si = sin(*s1) ;
-    co = cos(*s1) ;
-    *r1 = atan2((vs[0]*si - vs[1]*co),-(vs[0]*co + vs[1]*si)*vn[2]) ;
+    *strike1 = atan2(-vn[0], vn[1]) ;
+    *dip1 = acos(-vn[2]) ;
+    si = sin(*strike1) ;
+    co = cos(*strike1) ;
+    *rake1 = atan2((vs[0]*si - vs[1]*co),-(vs[0]*co + vs[1]*si)*vn[2]) ;
 
     /* *** Second nodal plane *** */
     for(i=0;i<3;i++)
@@ -1491,21 +1521,21 @@ void get_planes(double *vm, double **TM, double *eval3, double *s1,double *d1,do
             vn[i] = -vn[i] ;
             vs[i] = -vs[i] ;
         }
-    *s2 = atan2(-vn[0], vn[1]) ; /* strike */
-    *d2 = acos(-vn[2]) ;         /* dip    */
-    si = sin(*s2) ;             
-    co = cos(*s2) ;
-    *r2 = atan2((vs[0]*si - vs[1]*co),-(vs[0]*co + vs[1]*si)*vn[2]); /* rake */
+    *strike2 = atan2(-vn[0], vn[1]) ; /* strike */
+    *dip2 = acos(-vn[2]) ;            /* dip    */
+    si = sin(*strike2) ;             
+    co = cos(*strike2) ;
+    *rake2 = atan2((vs[0]*si - vs[1]*co),-(vs[0]*co + vs[1]*si)*vn[2]); /* rake */
 
-    *s1 = (*s1)/((double)DEG2RAD) ;
-    if ((*s1) < 0.) (*s1) += 360. ;
-    *d1 = (*d1)/((double)DEG2RAD) ;
-    *r1 = (*r1)/((double)DEG2RAD) ;
+    *strike1 = (*strike1)/((double)DEG2RAD) ;
+    if ((*strike1) < 0.) (*strike1) += 360. ;
+    *dip1 = (*dip1)/((double)DEG2RAD) ;
+    *rake1 = (*rake1)/((double)DEG2RAD) ;
     
-    *s2 = (*s2)/((double)DEG2RAD) ;
-    if ((*s2) < 0.) (*s2) += 360. ;
-    *d2 = (*d2)/((double)DEG2RAD) ;
-    *r2 = (*r2)/((double)DEG2RAD) ;
+    *strike2 = (*strike2)/((double)DEG2RAD) ;
+    if ((*strike2) < 0.) (*strike2) += 360. ;
+    *dip2 = (*dip2)/((double)DEG2RAD) ;
+    *rake2 = (*rake2)/((double)DEG2RAD) ;
     
     /* Memory Freeing */
     free((void*)vn) ;
@@ -2537,7 +2567,12 @@ void copy_eq(struct_quake_params *i_eq, struct_quake_params *o_eq)
     o_eq->nsac = i_eq->nsac ;
     o_eq->nsini = i_eq->nsini ;
     o_eq->Cond = i_eq->Cond ;
-    memcpy(o_eq->global_rms,i_eq->global_rms,2*sizeof(double));    
+    memcpy(o_eq->global_rms,i_eq->global_rms,2*sizeof(double));
+    o_eq->R_ts   = i_eq->R_ts ;
+    o_eq->R_hd   = i_eq->R_hd ;
+    o_eq->R_evla = i_eq->R_evla ;
+    o_eq->R_evlo = i_eq->R_evlo ;
+    o_eq->R_evdp = i_eq->R_evdp ;    
 }
 
 
@@ -2720,11 +2755,11 @@ void run_xy_gs(double **coords,int Ngrid,int M,int nd,double *dv,
     copy_eq(eq,&eq_gs) ;
     for(j=0 ; j<2 ; j++)
       eq_gs.global_rms[j] = 0. ;       
-    opt_gs.rms_in = double_alloc(eq->nsac) ;
-    opt_gs.rms_r  = double_alloc(eq->nsac) ;
-    opt_gs.p2p    = double_alloc(eq->nsac) ;
-    opt_gs.avg    = double_alloc(eq->nsac) ;
-    opt_gs.wgt    = double_alloc(eq->nsac) ;
+    opt_gs.rms_in  = double_alloc(eq->nsac) ;
+    opt_gs.rms_r   = double_alloc(eq->nsac) ;
+    opt_gs.p2p     = double_alloc(eq->nsac) ;
+    opt_gs.avg     = double_alloc(eq->nsac) ;
+    opt_gs.wgt     = double_alloc(eq->nsac) ;
     copy_opt(opt,&opt_gs,eq->nsac) ;    
     /* Main loop */
     for(i=0;i<Ngrid;i++)

@@ -92,6 +92,7 @@ typedef struct
   char   osacdir[FSIZE], psfile[FSIZE]      ; 
   char   wpbmfile[FSIZE], refbmfile[FSIZE], comments[NCOM][LSIZE];
   char   tsgsfile[FSIZE], xygsfile[FSIZE], o_covf[FSIZE] ; 
+  char   inifile[FSIZE], gs_flag[2]         ;
 } struct_opt ;
 
 /* Screening routines */
@@ -136,22 +137,22 @@ void calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
 void residual_moment(double **vm, double *ma, double *mb, double *mc) ;
 void mt2sm(double *vm,double *sm) ;
 void set_mt(double *vm, double **TM) ;
-void get_planes(double *vm, double **TM, double *eval3, double *s1, 
-		double *d1, double *r1, double *s2,double *d2,double *r2) ;
+void get_planes(double *vm, double **TM, double *eval3, double *strike1, 
+		double *dip1, double *rake1, double *strike2,double *dip2,double *rake2) ;
 void w_log_header(char **argv, struct_opt *opt, struct_quake_params *eq, double *wp_win4, 
 		  FILE *o_log) ;
 void write_cmtf(char *filename, struct_quake_params *eq, double *vm) ;
 void w_o_saclst(int ns, char **sacfiles, sachdr *hd_synt, double **rms, 
 		double *data_norm, struct_opt *opt) ;
 void get_gap(sachdr *hd_synt, int ns, double *gap) ;
-int charplot(double *M, double s1, double d1, double s2, double d2, 
+int charplot(double *M, double strike1, double dip1, double strike2, double dip2, 
 	     char D, char P, char W, char B, char sep, char pnod, 
 	     int rx, int ry, FILE *stream) ;
 void output_products(struct_opt *opt, struct_quake_params *eq,
 		     sachdr *hd_synt, FILE *o_log, 
                      char **argv) ;
 void prad_pat(double **TM, FILE *ps)               ;
-void pnod_pat(double *s1, double *d1, FILE *ps)    ;
+void pnod_pat(double *strike, double *dip, FILE *ps)    ;
 
 
 void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char ***sacfiles,

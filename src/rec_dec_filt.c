@@ -200,8 +200,9 @@ int main(int argc, char *argv[])
     fclose(i_sacf) ;
     fclose(o_sacf) ;
 
+    /* Creating / Overwriting the INI file */
     printf("%d channels remain after deconvolution and filtering (%d rejected)\n",count,nsac-count) ;
-    FILE * testfile = fopen("test.ini", "w");
+    FILE * testfile = fopen("wpinversion.ini", "w");
     fprintf(testfile, "[prepare__dec_filt]\n");
     fprintf(testfile, "nb_channel_dec=%d\n", count);
     fprintf(testfile, "nb_rejected_channels_dec=%d\n", nsac-count);

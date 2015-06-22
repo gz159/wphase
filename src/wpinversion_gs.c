@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 {
     int i, j, nsac, M, ierror ;
     int    nh = NDEPTHS, nd = NDISTAS ;
-    double s2, d2, r2;
+    double strike2, dip2, rake2;
     double latopt,lonopt,depopt,tsopt,rmsopt ;
     double *eval3, *data_norm, **TM, sdrM0[4] ;
     double **data,  **rms, ***G = NULL, ***dcalc ;
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
     if (opt.dc_flag) /* Double Couple inversion                 */
     {              /* WARNING: This has not been fully tested */
         inversion(M,hd_synt,G,data,&opt,NULL,&eq) ;
-        get_planes(eq.vm[0],TM,eval3,&sdrM0[0],&sdrM0[1],&sdrM0[2],&s2,&d2,&r2) ;
+        get_planes(eq.vm[0],TM,eval3,&sdrM0[0],&sdrM0[1],&sdrM0[2],&strike2,&dip2,&rake2) ;
         sdrM0[3] = (fabs(eval3[0]) + fabs(eval3[2])) / 2.  ;
         for(i=0;i<opt.ip;i++)
             sdrM0[opt.ib[i]-1] = opt.priorsdrM0[opt.ib[i]-1] ;
@@ -165,6 +165,7 @@ int main(int argc, char *argv[])
         strcpy(opt.p_data,"ts_fort.15")       ;
         strcpy(opt.o_saclst,"ts_o_wpinversion") ;
         strcpy(opt.o_covf,"ts_o_covariance")  ;
+        strcpy(opt.gs_flag, "ts");
         if (opt.hdsafe)
         {
             ts_gridsearch(eq.nsac,M,nd,dv,tv,hd_synt,data,eq.global_rms,
@@ -208,6 +209,7 @@ int main(int argc, char *argv[])
         strcpy(opt.p_data,"xy_fort.15")       ;
         strcpy(opt.o_covf,"xy_o_covariance")  ;
         strcpy(opt.o_saclst,"xy_o_wpinversion") ;
+        strcpy(opt.gs_flag, "xy");
         xy_gridsearch(M,nd,dv,tv,hd_synt,data,G,dcalc,rms,&opt,&eq,&rmsopt,&latopt,&lonopt,&depopt,o_log) ;  
         eq.evla = latopt ;
         eq.evlo = lonopt ;
@@ -473,11 +475,13 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
     strcpy(opt->o_cmtf,"gs_WCMTSOLUTION")  ;
     strcpy(opt->p_data,"gs_fort.15")       ;
     strcpy(opt->psfile,"gs_p_wpinversion.ps") ;
+    strcpy(opt->inifile, "wpinversion_gs.ini");
     strcpy(opt->wpbmfile,"")  ;
     strcpy(opt->refbmfile,"") ;
     strcpy(opt->osacdir,"./") ;
     strcpy(opt->tsgsfile,"grid_search_ts_out") ;
     strcpy(opt->xygsfile,"grid_search_xy_out") ;
+    strcpy(opt->gs_flag, "0");
     eq->cmtfile[0] = '\0' ;
     opt->th_val    = 0.  ;
     opt->cth_val   = 0.  ;
@@ -530,6 +534,11 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
         {
             get_char_arg(argv, j, i, numarg2, opt->log) ;
             k+=2 ;
+        }
+        if (!strncmp(argv[j],"-ini",4))
+        {
+            get_char_arg(argv,j,i,numarg2,opt->inifile);
+            k+=2;
         }
         else if (!strncmp(argv[j],"-ocovf",6))
         {

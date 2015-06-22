@@ -397,10 +397,12 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
     strcpy(opt->o_cmtf,"WCMTSOLUTION");
     strcpy(opt->p_data,"fort.15");
     strcpy(opt->psfile,"p_wpinversion.ps");
+    strcpy(opt->inifile, "wpinversion.ini");
     strcpy(opt->wpbmfile,"");
     strcpy(opt->refbmfile,"");
     strcpy(opt->osacdir,"./");
     strcpy(opt->tsgsfile,"grid_search_ts_out");
+    strcpy(opt->gs_flag, "0");
     eq->cmtfile[0] = '\0';
     opt->th_val    = 0. ;
     opt->rms_r_th  = 0. ;
@@ -451,6 +453,11 @@ void get_opt(numarg1, numarg2, argv, opt, eq)
         if (!strncmp(argv[j],"-log",4))
         {
             get_char_arg(argv,j,i,numarg2,opt->log);
+            k+=2;
+        }
+        if (!strncmp(argv[j],"-ini",4))
+        {
+            get_char_arg(argv,j,i,numarg2,opt->inifile);
             k+=2;
         }
         if (!strncmp(argv[j],"-ocovf",6))

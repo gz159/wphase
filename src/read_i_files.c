@@ -141,7 +141,8 @@ int get_cmtf(eq, flag)
                 nb2+= 10+nb_blank(line+10)+1 ;
                 tmp1 = sscanf (&line[nb2], "%lf", &eq->ts) ;
                 check_scan(1, tmp1, eq->cmtfile, cmtfile) ;
-                nl++; 
+                nl++;
+                eq->R_ts = eq->ts ;
             }
             else if (strncmp(&line[nb2],"half duration",13)==0)
             {
@@ -149,6 +150,7 @@ int get_cmtf(eq, flag)
                 tmp1 = sscanf (&line[nb2], "%lf", &eq->hd) ;
                 check_scan(1, tmp1, eq->cmtfile, cmtfile) ;
                 nl++; 
+                eq->R_hd = eq->hd ;
             }
             else if (strncmp(&line[nb2],"latitude",8)==0)
             {
@@ -156,6 +158,7 @@ int get_cmtf(eq, flag)
                 tmp1 = sscanf (&line[nb2], "%lf\n", &eq->evla) ;
                 check_scan(1, tmp1, eq->cmtfile, cmtfile)    ;
                 nl++; 
+                eq->R_evla = eq->evla ;
             }     
             else if (strncmp(&line[nb2],"longitude",9)==0)
             {
@@ -163,6 +166,7 @@ int get_cmtf(eq, flag)
                 tmp1 = sscanf (&line[nb2], "%lf\n", &eq->evlo) ;
                 check_scan(1, tmp1, eq->cmtfile, cmtfile)    ;
                 nl++; 
+                eq->R_evlo = eq->evlo ;
             }     
             else if (strncmp(&line[nb2],"depth",5)==0)
             {
@@ -170,6 +174,7 @@ int get_cmtf(eq, flag)
                 tmp1 = sscanf (&line[nb2], "%lf", &eq->evdp) ;
                 check_scan(1, tmp1, eq->cmtfile, cmtfile)    ;
                 nl++; 
+                eq->R_evdp = eq->evdp ;
             }
             if (flag == 2)
             {
