@@ -55,7 +55,7 @@ int pnodal(char **figure, double s, double d, int rx, int ry, char pnod)
     return 1;
 }
 
-int charplot(double *M, double s1, double d1, double s2, double d2, 
+int charplot(double *M, double strike1, double dip1, double strike2, double dip2, 
              char D, char C, char W, char B, char sep, char pnod, int rx, 
              int ry, FILE *stream)
 {
@@ -127,8 +127,8 @@ int charplot(double *M, double s1, double d1, double s2, double d2,
     }
     else            /* Nodal planes */
     {  
-        pnodal(figure, s1*M_PI/180. , d1*M_PI/180. , rx, ry, pnod) ;
-        pnodal(figure, s2*M_PI/180. , d2*M_PI/180. , rx, ry, pnod) ; 
+        pnodal(figure, strike1*M_PI/180. , dip1*M_PI/180. , rx, ry, pnod) ;
+        pnodal(figure, strike2*M_PI/180. , dip2*M_PI/180. , rx, ry, pnod) ; 
         /*        Printing    */
         for(jy = -ry; jy <= ry; jy++)
         {

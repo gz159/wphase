@@ -51,21 +51,21 @@
 
 
 double **set_mt(double *vm) ;
-void   get_planes(double *vm, double **eval3, double ***evec3, double *s1, double *d1, 
-                  double *r1, double *s2,double *d2,double *r2) ;
+void   get_planes(double *vm, double **eval3, double ***evec3, double *strike1, double *dip1, 
+                  double *rake1, double *strike2,double *dip2,double *rake2) ;
 void   jacobi(double **a,int n, int np, double *d, double **v, int *nrot) ;
 void   eigsrt(double *d, double **v, int n) ;
-int    charplot(double *M, double s1, double d1, double s2, double d2, 
+int    charplot(double *M, double strike1, double dip1, double strike2, double dip2, 
                 char D, char P, char W, char B, char sep, char pnod, 
                 int rx, int ry, FILE *stream) ;
 void   format_latlon(double lat, double lon, char *slat, char *slon) ;
-void   vn2sdr(double *vn, double *vs, double *s, double *d, double *r);
+void   vn2sdr(double *vn, double *vs, double *strike, double *dip, double *rake);
 double round(double x);
 
 int main(int argc, char *argv[])
 {
     int    i, p;
-    double s1, d1, r1, s2, d2, r2, plg[3], azm[3] ;
+    double strike1, dip1, rake1, strike2, dip2, rake2, plg[3], azm[3] ;
     double *eval3, **evec3, M0, Mw, scale         ;
     char pdela[8], pdelo[9], cenla[8],cenlo[9]    ;
     struct_quake_params eq ;
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     get_cmtf(&eq, 2) ;
   
     /* Best double couple solution */
-    get_planes(eq.vm[1], &eval3, &evec3, &s1,&d1,&r1, &s2,&d2,&r2) ;
+    get_planes(eq.vm[1], &eval3, &evec3, &strike1,&dip1,&rake1, &strike2,&dip2,&rake2) ;
     M0     = ((fabs(eval3[0]) + fabs(eval3[2])) * (double)POW) / 2. ; 
     Mw     = (log10(M0) - 16.1) / 1.5 ;  
   
@@ -133,11 +133,11 @@ int main(int argc, char *argv[])
     printf("2.(N)     %6.3f ;      %3.0f ;     %3.0f\n",eval3[1],plg[1],azm[1]);
     printf("3.(P)     %6.3f ;      %3.0f ;     %3.0f\n\n",eval3[2],plg[2],azm[2]);
     printf("Best Double Couple: M0=%8.2E dyn.cm\n",M0) ;
-    printf("NP1: Strike=%5.1f ; Dip=%4.1f ; Slip=%6.1f \n",s1,d1,r1) ;
-    printf("NP2: Strike=%5.1f ; Dip=%4.1f ; Slip=%6.1f \n\n",s2,d2,r2) ;
-    /* printf("NP1: Strike=%3.0f ; Dip=%.4f ; Slip=%3.0f \n",s1,d1,r1)   ; */
-    /* printf("NP2: Strike=%3.0f ; Dip=%.4f ; Slip=%3.0f \n\n",s2,d2,r2) ; */
-    charplot(eq.vm[1], s1,d1, s2,d2, '-', '#', ' ', '\0','\0','\0', RX, RY, stdout)  ;
+    printf("NP1: Strike=%5.1f ; Dip=%4.1f ; Slip=%6.1f \n",strike1,dip1,rake1) ;
+    printf("NP2: Strike=%5.1f ; Dip=%4.1f ; Slip=%6.1f \n\n",strike2,dip2,rake2) ;
+    /* printf("NP1: Strike=%3.0f ; Dip=%.4f ; Slip=%3.0f \n",strike1,dip1,rake1)   ; */
+    /* printf("NP2: Strike=%3.0f ; Dip=%.4f ; Slip=%3.0f \n\n",strike2,dip2,rake2) ; */
+    charplot(eq.vm[1], strike1,dip1, strike2,dip2, '-', '#', ' ', '\0','\0','\0', RX, RY, stdout)  ;
   
     free((void*)eq.vm[1]) ; 
     free((void**)eq.vm) ; 
@@ -180,8 +180,8 @@ double **set_mt(double *vm)
     return TM ;
 }
 
-void get_planes(vm, eval3, evec3, s1,d1,r1, s2,d2,r2)
-    double *vm, **eval3, ***evec3, *s1, *d1, *r1, *s2, *d2, *r2;
+void get_planes(vm, eval3, evec3, strike1,dip1,rake1, strike2,dip2,rake2)
+    double *vm, **eval3, ***evec3, *strike1, *dip1, *rake1, *strike2, *dip2, *rake2;
 {
     int    nrot, i ;
     double **TM;
@@ -205,8 +205,8 @@ void get_planes(vm, eval3, evec3, s1,d1,r1, s2,d2,r2)
          vn1[i] = ((*evec3)[i][0]+(*evec3)[i][2])/sqrt(2.) ;
          vn2[i] = ((*evec3)[i][0]-(*evec3)[i][2])/sqrt(2.) ;
     }
-    vn2sdr(vn1, vn2, s1, d1, r1); 
-    vn2sdr(vn2, vn1, s2, d2, r2); 
+    vn2sdr(vn1, vn2, strike1, dip1, rake1); 
+    vn2sdr(vn2, vn1, strike2, dip2, rake2); 
   
     /* Memory Freeing */
     free((void*)vn1) ;
@@ -216,7 +216,7 @@ void get_planes(vm, eval3, evec3, s1,d1,r1, s2,d2,r2)
     free((void**)TM)    ;
 }
 
-void vn2sdr(double *vn, double *vs, double *s, double *d, double *r)
+void vn2sdr(double *vn, double *vs, double *strike, double *dip, double *rake)
 {
     const float EPSI = 0.001;
     int   i;
@@ -230,29 +230,29 @@ void vn2sdr(double *vn, double *vs, double *s, double *d, double *r)
 
     if ( vn[0] > 1. - EPSI )     // Horizontal plane
     {
-        *s = 0.;
-        *d = 0.;
-        *r = atan2(-vs[2], -vs[1]);
+        *strike = 0.;
+        *dip = 0.;
+        *rake = atan2(-vs[2], -vs[1]);
     }
 
     else if ( vn[0] < EPSI )    // Vertical plane
     {
-        *s = atan2(vn[1], vn[2]);
-        *d = M_PI/2.;
-        *r = atan2(vs[0], -vs[1]*vn[2] + vs[2]*vn[1]);
+        *strike = atan2(vn[1], vn[2]);
+        *dip = M_PI/2.;
+        *rake = atan2(vs[0], -vs[1]*vn[2] + vs[2]*vn[1]);
     }
 
     else                        // Oblique plane
     { 
-        *s = atan2(vn[1], vn[2]);
-        *d = acos(vn[0]);
-        *r = atan2((-vs[1]*vn[1] - vs[2]*vn[2]), (-vs[1]*vn[2] + vs[2]*vn[1])*vn[0]);
+        *strike = atan2(vn[1], vn[2]);
+        *dip = acos(vn[0]);
+        *rake = atan2((-vs[1]*vn[1] - vs[2]*vn[2]), (-vs[1]*vn[2] + vs[2]*vn[1])*vn[0]);
     }
 
-    *s /= (double)DEG2RAD;
-    if ((*s) < 0.) 
-        (*s) += 360.;
-    *d /= (double)DEG2RAD;
-    *r /= (double)DEG2RAD;
+    *strike /= (double)DEG2RAD;
+    if ((*strike) < 0.) 
+        (*strike) += 360.;
+    *dip /= (double)DEG2RAD;
+    *rake /= (double)DEG2RAD;
     return;
 }
