@@ -106,14 +106,14 @@ $(BIN)/WP_HEADER.CSH:configure.csh
 # LINKING
 
 # optional routines:
-$(BIN)/cmtascii:cmtascii.o proto_alloc.o rwtextfiles.o jacobi.o charplot.o read_i_files.o
-	$(CC) $(LDFLAGS) cmtascii.o proto_alloc.o rwtextfiles.o jacobi.o charplot.o \
+$(BIN)/cmtascii:cmtascii.o proto_alloc.o rwtextfiles.o jacobi.o charplot.o read_i_files.o get_planes.o
+	$(CC) $(LDFLAGS) cmtascii.o proto_alloc.o rwtextfiles.o jacobi.o charplot.o get_planes.o \
         read_i_files.o -o $(BIN)/cmtascii -lm
 
 # Inversion
 $(BIN)/wpinversion:wpinversion.o wpinversion_sub.o jacobi.o charplot.o \
-	lsqenp2.o syn_conv_sub.o butterworth.o $(OBJS)
-	$(FC) $(LDFLAGS) wpinversion.o wpinversion_sub.o jacobi.o charplot.o \
+	lsqenp2.o syn_conv_sub.o butterworth.o get_planes.o $(OBJS)
+	$(FC) $(LDFLAGS) wpinversion.o wpinversion_sub.o jacobi.o charplot.o get_planes.o \
 	lsqenp2.o syn_conv_sub.o butterworth.o $(OBJS) -o $(BIN)/wpinversion -lm
 
 # Green's functions
@@ -136,9 +136,9 @@ $(BIN)/prep_kernels_only_Z: prep_kernels_only_Z.o butterworth.o sys_cmd.o syn_co
 	$(CC) ${LDFLAGS} -o $(BIN)/prep_kernels_only_Z prep_kernels_only_Z.o butterworth.o sys_cmd.o syn_conv_sub.o $(OBJS) -lm 
 
 
-$(BIN)/wpinversion_gs: wpinversion_gs.o wpinversion_sub.o \
+$(BIN)/wpinversion_gs: wpinversion_gs.o wpinversion_sub.o get_planes.o \
 	jacobi.o charplot.o butterworth.o syn_conv_sub.o $(OBJS) lsqenp2.o
-	$(FC) $(LDFLAGS) wpinversion_gs.o wpinversion_sub.o jacobi.o \
+	$(FC) $(LDFLAGS) wpinversion_gs.o wpinversion_sub.o jacobi.o get_planes.o \
 	charplot.o butterworth.o syn_conv_sub.o $(OBJS) lsqenp2.o -o $(BIN)/wpinversion_gs -lm
 
 # MT rotation

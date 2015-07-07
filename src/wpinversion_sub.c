@@ -65,10 +65,12 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     int    i,j,k=0,p,nb,nb2,size,*nbcmp  ;
     double M0a=0.,Mwa=0.,M0_12a=0.;
     double M0b=0.,Mwb=0.,M0_12b=0.,ma,mb,mc  ;
-    double strike1a, dip1a, rake1a, strike2a, dip2a, rake2a, gap, **TMa, *eval3a;
+    double strike1a, dip1a, rake1a, strike2a, dip2a, rake2a, gap, *eval3a;
     double strike1b,strike2b,dip1b,dip2b,rake1b,rake2b,tmp,scale ;
-    double diplow,**TMb,*eval3b    ;
-    int nbstations = 0;
+    double diplow,*eval3b    ;
+    double **evec3;
+    double azm[3], plg[3];
+    int    nbstations = 0;
     char   *buf,*buf2,**sta,**cmp  ;
     FILE   *ps,*o_bitmap           ;
     char   gf_path[FSIZE];
@@ -80,11 +82,10 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     buf    = char_alloc(9) ;
     buf2   = char_alloc(32) ;
     sta    = char_calloc2(eq->nsac, 9) ;
-    cmp    = char_calloc2(eq->nsac,30) ;    
-    eval3b = NULL;
-    TMb    = NULL;
+    cmp    = char_calloc2(eq->nsac,30) ;  
     eval3a = double_alloc(3);
-    TMa    = double_alloc2(3,3);
+    eval3b = double_alloc(3)    ;
+    evec3 = double_alloc2(3,3) ;
 
     if(getenv("GF_PATH")) 
        strncpy(gf_path, getenv("GF_PATH"), FSIZE);
@@ -94,15 +95,14 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     if (opt->ref_flag)
     {
         eval3b = double_alloc(3)  ;
-        TMb = double_alloc2(3,3) ;
-        get_planes(eq->vm[1], TMb, eval3b, &strike1b,&dip1b,&rake1b, &strike2b,&dip2b,&rake2b) ;
+        get_planes(eq->vm[1], eval3b, evec3, &strike1b,&dip1b,&rake1b, &strike2b,&dip2b,&rake2b) ;
         M0b = ((fabs(eval3b[0]) + fabs(eval3b[2])) * (double)POW) / 2. ; 
         Mwb = (log10(M0b) - 16.1) / 1.5 ;
         residual_moment(eq->vm, &ma, &mb, &mc) ;
     }
 
     /* Set stike/dip/rake */
-    get_planes(eq->vm[0], TMa, eval3a, &strike1a,&dip1a,&rake1a, &strike2a,&dip2a,&rake2a);
+    get_planes(eq->vm[0], eval3a, evec3, &strike1a,&dip1a,&rake1a, &strike2a,&dip2a,&rake2a);
     write_cmtf(opt->o_cmtf, eq, eq->vm[0]);  
 
     /* Set Moment and Magnitude (Harvard Definition) */
@@ -127,7 +127,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
         if(opt->ref_flag)
             tmp=0.5;
         fprintf(ps,"%5.2f %5.2f translate\n",1.1-tmp,0.12+tmp/10.0) ;
-        prad_pat(TMa, ps) ;
+        prad_pat(eq->vm[0], ps) ;
         pnod_pat(&strike1a,&dip1a,ps) ;
         pnod_pat(&strike2a,&dip2a,ps) ;
         fprintf(ps,"/Times-Roman findfont .12 scalefont setfont\n") ;
@@ -300,6 +300,9 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
             fprintf(ps,"%15.6f %15.6f moveto\n", 1.5, -4.3-(float)i * 0.125 );
             fprintf(ps,"(%s) show\n", opt->comments[i]) ;
         }
+        /* Version */
+        fprintf(ps,"%15.6f %15.6f moveto\n", 1.5, -4.3-(float)opt->ncom * 0.125 );
+        fprintf(ps,"(Version : %d) show\n", VERSION) ;
 
         /* pde  */
         fprintf(ps,"/Courier-Bold findfont .07 scalefont setfont\n");
@@ -345,7 +348,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
             fprintf(ps, "%15.6f %15.6f moveto\n", -1.1, -1.6) ;
             fprintf(ps,"(ratio = %5.2f ;  epsilon = %6.3f) show\n",M0b/M0a,mc) ;
             fprintf(ps,".5 .5 .9 setrgbcolor\n") ;
-            prad_pat(TMb, ps)        ;
+            prad_pat(eq->vm[1], ps)        ;
             pnod_pat(&strike1b, &dip1b, ps) ;
             pnod_pat(&strike2b, &dip2b, ps) ;
         }
@@ -450,6 +453,71 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     fprintf(o_ini, "eventid              = %-s\n", eq->evid);
     fprintf(o_ini, "GF_PATH              = %-s\n", gf_path);
 
+    // FLAGS
+    fprintf(o_ini, "\n;flags\n");
+    fprintf(o_ini, "o_covf               = %-s\n", opt->o_covf);
+    fprintf(o_ini, "o_cmtf               = %-s\n", opt->o_cmtf);
+    fprintf(o_ini, "cmtfile              = %-s\n",  eq->cmtfile);
+    fprintf(o_ini, "th_val               = %f\n",  opt->th_val);
+    fprintf(o_ini, "rms_r_th             = %f\n",  opt->rms_r_th);
+    fprintf(o_ini, "cth_val              = %f\n",  opt->cth_val);
+    fprintf(o_ini, "df_val               = %f\n",  opt->df_val);
+    fprintf(o_ini, "ts_Nit               = %d\n",  opt->ts_Nit);
+    fprintf(o_ini, "dts_val              = %f\n",  opt->dts_val);
+    fprintf(o_ini, "dts_min              = %f\n",  opt->dts_min);
+    fprintf(o_ini, "dts_max              = %f\n",  opt->dts_max);
+    fprintf(o_ini, "dts_step             = %f\n",  opt->dts_step);
+    if (opt->hdsafe == 0.)
+        fprintf(o_ini, "hdsafe               = False\n");
+    else
+        fprintf(o_ini, "hdsafe               = True\n");
+    fprintf(o_ini, "xy_Nit               = %d\n", opt->xy_Nit);
+    fprintf(o_ini, "xy_dx                = %f\n", opt->xy_dx);
+    fprintf(o_ini, "xy_Nx                = %d\n", opt->xy_Nx);
+    fprintf(o_ini, "dz                   = %f\n", opt->dz);
+    fprintf(o_ini, "mindep               = %f\n", opt->mindep);
+    fprintf(o_ini, "xy_Nopt              = %d\n", opt->xy_Nopt);
+    int ip;
+    char ib[25];
+    strcpy(ib, "");
+    for (ip=0;ip<4;ip++)
+    {
+        if (opt->ib[ip] == 1)
+            strcat(ib, "strike ");
+        if (opt->ib[ip] == 2)
+            strcat(ib, "dip ");
+        if (opt->ib[ip] == 3)
+            strcat(ib, "rake ");
+        if (opt->ib[ip] == 4)
+            strcat(ib, "mom ");
+    }
+    fprintf(o_ini, "ib                   = %s\n", ib);
+    if (opt->dc_flag)
+        fprintf(o_ini, "priorsdrM0           = %f  %f  %f  %f\n", opt->priorsdrM0[0], opt->priorsdrM0[1], opt->priorsdrM0[2], opt->priorsdrM0[3]);
+    else
+        fprintf(o_ini, "priorsdrM0           = \n");
+    fprintf(o_ini, "azp                  = %f\n", opt->azp);
+    if (opt->med_val == 0.)
+        fprintf(o_ini, "med_val_flag         = False\n");
+    else
+        fprintf(o_ini, "med_val_flag         = True\n");
+    if (opt->op_pa == 0.)
+        fprintf(o_ini, "op_pa_flag           = False\n");
+    else
+        fprintf(o_ini, "op_pa_flag           = True\n");
+    if (opt->ntr_val == 0.)
+        fprintf(o_ini, "ntr_flag             = False\n");
+    else
+        fprintf(o_ini, "ntr_flag             = True\n");
+    if (opt->ref_flag == 0.)
+        fprintf(o_ini, "ref_flag             = False\n");
+    else
+        fprintf(o_ini, "ref_flag             = True\n");
+    if (opt->ps == 0.)
+        fprintf(o_ini, "ps_flag              = False\n");
+    else
+        fprintf(o_ini, "ps_flag              = True\n");
+
     // COMMENTS
     fprintf(o_ini, "\n;comments\n");
     fprintf(o_ini, "nb_comments          = %d\n", opt->ncom);
@@ -516,11 +584,31 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
 
     // EIGENVALUES WCMT
     fprintf(o_ini, "\n;eigenvalues_WCMT\n");
-    fprintf(o_ini, "W_eig1               = %14.4f\n", eval3a[0]);
-    fprintf(o_ini, "W_eig2               = %14.4f\n", eval3a[1]);
-    fprintf(o_ini, "W_eig3               = %14.4f\n", eval3a[2]);
+    fprintf(o_ini, "W_eig_T              = %14.6e\n", eval3a[0]*(double)POW);
+    fprintf(o_ini, "W_eig_N              = %14.6e\n", eval3a[1]*(double)POW);
+    fprintf(o_ini, "W_eig_P              = %14.6e\n", eval3a[2]*(double)POW);
 
-    
+    for (i=0; i<3 ; i++)
+    {
+        azm[i] = atan2(evec3[2][i],-evec3[1][i])/DEG2RAD+360.;
+        scale  = evec3[1][i]*evec3[1][i] + evec3[2][i]*evec3[2][i] ;
+        plg[i] = atan2(-evec3[0][i],sqrt(scale))/DEG2RAD;
+        if(plg[i]<0.0)
+        {
+            plg[i] *= -1. ;
+            azm[i] += 180.;
+        }
+        azm[i] = fmod(azm[i], 360.);
+    }
+
+    fprintf(o_ini, "W_azm_T              = %14.6e\n", azm[0]);
+    fprintf(o_ini, "W_azm_N              = %14.6e\n", azm[1]);
+    fprintf(o_ini, "W_azm_P              = %14.6e\n", azm[2]);
+    fprintf(o_ini, "W_plg_T              = %14.6e\n", plg[0]);
+    fprintf(o_ini, "W_plg_N              = %14.6e\n", plg[1]);
+    fprintf(o_ini, "W_plg_P              = %14.6e\n", plg[2]);
+
+
     if(opt->ref_flag)
     {  
         // CENTROID MOMENT TENSOR RCMT
@@ -557,9 +645,9 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
 
         // EIGENVALUES RCMT
         fprintf(o_ini, "\n;eigenvalues_RCMT\n");
-        fprintf(o_ini, "R_eig1               = %14.4f\n", eval3b[0]);
-        fprintf(o_ini, "R_eig2               = %14.4f\n", eval3b[1]);
-        fprintf(o_ini, "R_eig3               = %14.4f\n", eval3b[2]); 
+        fprintf(o_ini, "R_eig1               = %14.6e\n", eval3b[0]*(double)POW);
+        fprintf(o_ini, "R_eig2               = %14.6e\n", eval3b[1]*(double)POW);
+        fprintf(o_ini, "R_eig3               = %14.6e\n", eval3b[2]*(double)POW); 
     }
 
 
@@ -633,7 +721,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     fprintf(o_ini, "WRMS                 = %9.5f\n", 1000.*eq->global_rms[0]);
     fprintf(o_ini, "WRMS_r               = %9.5f\n", eq->global_rms[0]/eq->global_rms[1]);
     fprintf(o_ini, "Gap                  = %5.1f\n", gap);
-    if (opt->dc_flag == 0)
+    if (opt->dc_flag != 0)
         fprintf(o_ini, "Cond_number          = ---\n");
     else
         fprintf(o_ini, "Cond_number          = %10.1f\n", eq->Cond); 
@@ -664,11 +752,15 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     /* Memory Freeing */
     if (opt->ref_flag)
     {
-        for(i=0 ; i<3 ; i++) 
-            free((void*)TMb[i]) ;
-        free((void**)TMb)     ;
         free((void*)eval3b)   ;
     }
+    for(i=0 ; i<3 ; i++) 
+    {
+        free((void*)evec3[i]) ;
+    }
+    free((void*)eval3a)   ;
+    free((void*)evec3)   ;
+
     free((void*)nbcmp)    ;
     free((void*)buf)      ;
     free((void*)buf2)     ;
@@ -677,24 +769,49 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
         free((void*)sta[i]) ;
         free((void*)cmp[i]) ; 
     }
-    free((void**)cmp)     ;
-    free((void**)sta)     ;
+    free((void*)cmp)     ;
+    free((void*)sta)     ;
 
 }
 
 /*******************************/
-/*       prad_pat(TM, ps)      */
+/*     set_mt_aki(vm, TM)      */
+/*******************************/
+/* Rotation of pi around East-axis       */
+/* The new system is (North, East, Down) */
+/* (Aki's coordinates)                   */
+
+void set_mt_aki(double *vm, double **TM)
+{
+    TM[0][0] =   vm[1] ;  
+    TM[1][1] =   vm[2] ; 
+    TM[2][2] =   vm[0] ;
+    TM[0][1] =  -vm[5] ;
+    TM[0][2] =   vm[3] ;
+    TM[1][2] =  -vm[4] ;
+    TM[1][0] = TM[0][1] ;
+    TM[2][0] = TM[0][2] ;
+    TM[2][1] = TM[1][2] ;
+}
+
+
+/*******************************/
+/*       prad_pat(vm, ps)      */
 /*******************************/
 /* Plot ps beach ball          */
 /* Input: TM : moment tensor   */
 /*        ps : ps FILE stream  */
-void prad_pat(double **TM, FILE *ps)
+void prad_pat(double *vm, FILE *ps)
 {
     int    i, j, k, l, N = 20, M ;
     double x, y, ymax, rad ;
     double azi, ain, rpp, *r  ;
+    double **TM;
 
-    r = double_alloc(3) ;
+    r  = double_alloc(3)   ;
+    TM = double_alloc2(3,3);
+
+    set_mt_aki(vm, TM);
 
     fprintf(ps,"newpath\n") ;
     for(i=-N; i<=N; i++)
@@ -730,6 +847,9 @@ void prad_pat(double **TM, FILE *ps)
     fprintf(ps,"0 0 1 0 360 arc\n") ;
     fprintf(ps,"stroke\n")          ;
     free((void*)r) ;
+    for(i=0;i<3;i++)
+        free((void*)TM[i]);
+    free((void*)TM) ;
 }
 
 /***************************************/
@@ -1234,9 +1354,9 @@ void inversion(int M, sachdr *hd_synt, double ***G, double **d,
         free((void*)eigvects[i]) ; 
         free((void*)cov[i])      ;
     }
-    free((void**)GtG)      ; 
-    free((void**)eigvects) ; 
-    free((void**)cov)      ; 
+    free((void*)GtG)      ; 
+    free((void*)eigvects) ; 
+    free((void*)cov)      ; 
 }
   
 
@@ -1317,7 +1437,7 @@ void inversion_dc(sachdr *hd_synt, double ***G, double **d,
     for(i=0;i<eq->nsac;i++)
 	  {
 	      free((void*) dcalc[i][0]) ;
-	      free((void**)dcalc[i])    ;
+	      free((void*)dcalc[i])    ;
 	  }
     /*     } */
 
@@ -1384,13 +1504,13 @@ void inversion_dc(sachdr *hd_synt, double ***G, double **d,
     {
         free((void*) rms[i])      ;
         free((void*) dcalc[i][0]) ;
-        free((void**)dcalc[i])    ;
+        free((void*)dcalc[i])    ;
     }
-    free((void***)dcalc)    ;
-    free((void**) rms   )   ;
+    free((void*)dcalc)    ;
+    free((void*) rms   )   ;
     free((void*)global_rms) ; 
     free((void*)vm[0]) ;
-    free((void**)vm  ) ;
+    free((void*)vm  ) ;
 }
 
 
@@ -1435,115 +1555,8 @@ void mt2sm(double *vm, double *sm)
     *sm += 2.*(vm[3]*vm[3]+vm[4]*vm[4]+vm[5]*vm[5]) ;
     *sm = sqrt(*sm/2.) ;
 }
-
-
-void set_mt(double *vm, double **TM)
-{
-    TM[0][0] =   vm[1] ;  /* Rotation of pi around East-axis       */
-    TM[1][1] =   vm[2] ;  /* The new system is (North, East, Down) */
-    TM[2][2] =   vm[0] ;  /* (Aki's coordinates)                   */
-    TM[0][1] =  -vm[5] ;
-    TM[0][2] =   vm[3] ;
-    TM[1][2] =  -vm[4] ;
-    TM[1][0] = TM[0][1] ;
-    TM[2][0] = TM[0][2] ;
-    TM[2][1] = TM[1][2] ;
-}
   
-void get_planes(double *vm, double **TM, double *eval3, double *strike1,double *dip1,double *rake1, double *strike2,double *dip2,double *rake2)
-{
-    int    nrot, i ;
-    double si, co  ;
-    double **evec3, *vn, *vs ;
 
-    
-    /* Memory allocation */
-    evec3  = double_alloc2(3,3) ;
-    vn     = double_alloc(3)    ;
-    vs     = double_alloc(3)    ;
-    
-    /* Tensor representation */  
-    set_mt(vm,TM) ;
-
-    /* Get eigvalues and eigvectors*/
-    jacobi(TM,3,3,eval3,evec3,&nrot) ;
-    eigsrt(eval3,evec3,3) ;
-
-    /* Check if eigenvectors are upwards */
-    if(evec3[2][0] < 0.0) 
-        for(i=0;i<3;i++)
-        {
-            evec3[i][0] = -evec3[i][0] ;
-        }
-
-    if(evec3[2][2] < 0.) 
-        for(i=0;i<3;i++)
-            evec3[i][2] = -evec3[i][2] ;
-
-    /* Cross-product v2 = v1 x v3 */
-    evec3[0][1] = evec3[1][0]*evec3[2][2]-evec3[1][2]*evec3[2][0] ;
-    evec3[1][1] = evec3[2][0]*evec3[0][2]-evec3[2][2]*evec3[0][0] ;
-    evec3[2][1] = evec3[0][0]*evec3[1][2]-evec3[0][2]*evec3[1][0] ;
-       
-    TM[0][1] = TM[1][0] ; /* useless */
-    TM[0][2] = TM[2][0] ;
-    TM[1][2] = TM[2][1] ;
-    
-    /* *** First nodal plane *** */
-    for(i=0;i<3;i++)
-    {
-        vn[i] = (evec3[i][0]+evec3[i][2])/sqrt(2.) ;
-        vs[i] = (evec3[i][0]-evec3[i][2])/sqrt(2.) ;
-    }
-    if (vn[2] > 0.)
-        for(i=0;i<3;i++)
-        {
-            vn[i] = -vn[i] ;
-            vs[i] = -vs[i] ;
-        }
-    
-    *strike1 = atan2(-vn[0], vn[1]) ;
-    *dip1 = acos(-vn[2]) ;
-    si = sin(*strike1) ;
-    co = cos(*strike1) ;
-    *rake1 = atan2((vs[0]*si - vs[1]*co),-(vs[0]*co + vs[1]*si)*vn[2]) ;
-
-    /* *** Second nodal plane *** */
-    for(i=0;i<3;i++)
-    {
-        vn[i] = (evec3[i][0]-evec3[i][2])/sqrt(2.) ;
-        vs[i] = (evec3[i][0]+evec3[i][2])/sqrt(2.) ;
-    }
-
-    if (vn[2] > 0.) 
-        for(i=0;i<3;i++)
-        {
-            vn[i] = -vn[i] ;
-            vs[i] = -vs[i] ;
-        }
-    *strike2 = atan2(-vn[0], vn[1]) ; /* strike */
-    *dip2 = acos(-vn[2]) ;            /* dip    */
-    si = sin(*strike2) ;             
-    co = cos(*strike2) ;
-    *rake2 = atan2((vs[0]*si - vs[1]*co),-(vs[0]*co + vs[1]*si)*vn[2]); /* rake */
-
-    *strike1 = (*strike1)/((double)DEG2RAD) ;
-    if ((*strike1) < 0.) (*strike1) += 360. ;
-    *dip1 = (*dip1)/((double)DEG2RAD) ;
-    *rake1 = (*rake1)/((double)DEG2RAD) ;
-    
-    *strike2 = (*strike2)/((double)DEG2RAD) ;
-    if ((*strike2) < 0.) (*strike2) += 360. ;
-    *dip2 = (*dip2)/((double)DEG2RAD) ;
-    *rake2 = (*rake2)/((double)DEG2RAD) ;
-    
-    /* Memory Freeing */
-    free((void*)vn) ;
-    free((void*)vs) ;
-    for(i=0 ; i<3 ; i++) 
-        free((void*)evec3[i]) ;
-    free((void**)evec3) ;
-}
 
 void set_wgt(int ns, sachdr *hd_data,struct_opt *opt) 
 {  
@@ -1619,7 +1632,7 @@ void free_G(double ***G)
   int i ;
   for(i=0; i<NM; i++)
       free((void *) (*G)[i]) ;
-  free((void**) (*G)) ;
+  free((void*) (*G)) ;
 }
 
 int fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts, 
@@ -1828,7 +1841,7 @@ void set_matrices (char ***sacfiles,sachdr **hd_synt,double ***data,
         {
             for(j=0; j<NM; j++)
                   free((void*)(*G)[ns][j]);
-            free((void**)(*G)[ns]);
+            free((void*)(*G)[ns]);
             continue ;
         }
         /* Read data samples */
@@ -2138,7 +2151,7 @@ void realloc_gridsearch(int nsac, double **rms, double *global_rms,
     {
         for(j=0 ; j<flag ; j++)
 		        free((void*)dcalc[i][j]) ;
-        free((void**)dcalc[i]);
+        free((void*)dcalc[i]);
     }
     for(j=0 ; j<2*flag ; j++) /* Initialize rms vectors      */
     {
@@ -2331,7 +2344,7 @@ void run_ts_gs(double *ts,int Ngrid, int M, int nd, double *dv,
     free((void*)eq_gs.wp_win4) ;
     free((void*)eq_gs.vm[0])   ;
     free((void*)eq_gs.vm[1])   ;
-    free((void**)eq_gs.vm)     ;
+    free((void*)eq_gs.vm)     ;
     if (opt->dc_flag)
         free((void*)sdrM0);
     for(i=0 ; i<eq->nsac ; i++)
@@ -2339,8 +2352,8 @@ void run_ts_gs(double *ts,int Ngrid, int M, int nd, double *dv,
         free((void*)rms[i] ) ;
         free_G(&G[i]);
     }
-    free((void***)dcalc)    ;
-    free((void**)rms )      ;
+    free((void*)dcalc)    ;
+    free((void*)rms )      ;
 }
 
 void ts_gridsearch(int nsac,int M,int nd,double *dv,double *tv,sachdr *hd_synt,double **data, 
@@ -2809,7 +2822,7 @@ void run_xy_gs(double **coords,int Ngrid,int M,int nd,double *dv,
     free((void*)eq_gs.wp_win4) ;
     free((void*)eq_gs.vm[0])   ;
     free((void*)eq_gs.vm[1])   ;
-    free((void**)eq_gs.vm)     ;
+    free((void*)eq_gs.vm)     ;
     free((void*)opt_gs.rms_in) ;
     free((void*)opt_gs.rms_r)  ;
     free((void*)opt_gs.p2p)    ;
@@ -2822,8 +2835,8 @@ void run_xy_gs(double **coords,int Ngrid,int M,int nd,double *dv,
         free((void*)rms[i] ) ;
         free_G(&G[i]);
     }
-    free((void***)dcalc)    ;
-    free((void**)rms )      ;
+    free((void*)dcalc)    ;
+    free((void*)rms )      ;
 }
 
 void xy_gridsearch(int M, int nd,double *dv,double *tv, sachdr *hd_synt, double **data,double ***G,
@@ -3015,7 +3028,7 @@ void xy_gridsearch(int M, int nd,double *dv,double *tv, sachdr *hd_synt, double 
     /* Free Memory */
     for(i=0;i<opt->xy_Nopt;i++)
         free((void*)opt_loc[i]);
-    free((void**)opt_loc);    
+    free((void*)opt_loc);    
     for(i=0;i<MaxNgrid;i++)
     {
         free((void*)old_loc[i]);
@@ -3023,10 +3036,10 @@ void xy_gridsearch(int M, int nd,double *dv,double *tv, sachdr *hd_synt, double 
         free((void*)vrms[i]);
         free((void*)vms[i]);
     }
-    free((void**)old_loc);
-    free((void**)new_loc);  
-    free((void**)vrms);
-    free((void**)vms);
+    free((void*)old_loc);
+    free((void*)new_loc);  
+    free((void*)vrms);
+    free((void*)vms);
 }
 
 
@@ -3407,7 +3420,7 @@ void calc_kernel(struct_quake_params *eq,struct_opt *opt,sachdr *hd_synth,char *
     free((void*)azs)    ;
     for(i=0;i<10;i++)
         free((void*)GFs[i]) ;
-    free((void**)GFs)     ;
+    free((void*)GFs)     ;
     free((void*)x_conv)   ;
     free((void*)S)    ;
     free((void*)TH)   ;

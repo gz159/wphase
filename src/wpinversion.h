@@ -34,7 +34,7 @@
 #endif
 
 #ifndef DEG2RAD
-#define DEG2RAD M_PI/180.
+#define DEG2RAD (M_PI/180.)
 #endif
 
 #ifndef RX
@@ -136,9 +136,7 @@ void calc_data(int nsac, sachdr *hd_synt, double ***G, double **vm,
 	       double **data, double ***d, struct_opt *opt, FILE *o_log);
 void residual_moment(double **vm, double *ma, double *mb, double *mc) ;
 void mt2sm(double *vm,double *sm) ;
-void set_mt(double *vm, double **TM) ;
-void get_planes(double *vm, double **TM, double *eval3, double *strike1, 
-		double *dip1, double *rake1, double *strike2,double *dip2,double *rake2) ;
+void get_planes(double *vm, double *eval3, double **evec3, double *strike1, double *dip1, double *rake1, double *strike2,double *dip2,double *rake2) ;
 void w_log_header(char **argv, struct_opt *opt, struct_quake_params *eq, double *wp_win4, 
 		  FILE *o_log) ;
 void write_cmtf(char *filename, struct_quake_params *eq, double *vm) ;
@@ -151,7 +149,7 @@ int charplot(double *M, double strike1, double dip1, double strike2, double dip2
 void output_products(struct_opt *opt, struct_quake_params *eq,
 		     sachdr *hd_synt, FILE *o_log, 
                      char **argv) ;
-void prad_pat(double **TM, FILE *ps)               ;
+void prad_pat(double *vm, FILE *ps)               ;
 void pnod_pat(double *strike, double *dip, FILE *ps)    ;
 
 

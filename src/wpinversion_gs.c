@@ -75,7 +75,8 @@ int main(int argc, char *argv[])
     int    nh = NDEPTHS, nd = NDISTAS ;
     double strike2, dip2, rake2;
     double latopt,lonopt,depopt,tsopt,rmsopt ;
-    double *eval3, *data_norm, **TM, sdrM0[4] ;
+    double *eval3, *data_norm, sdrM0[4] ;
+    double **evec3;
     double **data,  **rms, ***G = NULL, ***dcalc ;
     double *dv, *tv;
     char **sacfiles ;
@@ -89,8 +90,8 @@ int main(int argc, char *argv[])
     eq.vm    = double_alloc2p(2)  ;
     eq.vm[0] = double_calloc(NM)  ; 
     eq.vm[1] = double_calloc(NM)  ;
-    TM       = double_alloc2(3,3) ;
     eval3    = double_alloc(3)    ;
+    evec3    = double_alloc2(3,3) ;
     dv       = double_alloc(nd)   ;
     tv       = double_alloc(nd)   ;
 
@@ -130,7 +131,7 @@ int main(int argc, char *argv[])
     if (opt.dc_flag) /* Double Couple inversion                 */
     {              /* WARNING: This has not been fully tested */
         inversion(M,hd_synt,G,data,&opt,NULL,&eq) ;
-        get_planes(eq.vm[0],TM,eval3,&sdrM0[0],&sdrM0[1],&sdrM0[2],&strike2,&dip2,&rake2) ;
+        get_planes(eq.vm[0],eval3,evec3,&sdrM0[0],&sdrM0[1],&sdrM0[2],&strike2,&dip2,&rake2) ;
         sdrM0[3] = (fabs(eval3[0]) + fabs(eval3[2])) / 2.  ;
         for(i=0;i<opt.ip;i++)
             sdrM0[opt.ib[i]-1] = opt.priorsdrM0[opt.ib[i]-1] ;
@@ -238,8 +239,7 @@ int main(int argc, char *argv[])
     free((void*)eq.wp_win4) ;
     free((void*)eq.vm[0])   ;
     free((void*)eq.vm[1])   ;
-    free((void**)eq.vm)     ;
-    free((void*)eval3)      ;
+    free((void*)eq.vm)     ;
     free((void*)data_norm)  ;
     free((void*)dv) ;
     free((void*)tv) ;
@@ -251,16 +251,19 @@ int main(int argc, char *argv[])
         free_G(&G[i]);
         for(j=0 ; j<opt.ref_flag+1 ; j++)
             free((void*)dcalc[i][j]) ;
-        free((void**)dcalc[i]);
+        free((void*)dcalc[i]);
     }
-    free((void**)data)     ;
-    free((void**)rms )     ;
-    free((void**)sacfiles) ;
-    free((void***)G)       ;
-    free((void***)dcalc)   ;
+    free((void*)data)     ;
+    free((void*)rms )     ;
+    free((void*)sacfiles) ;
+    free((void*)G)       ;
+    free((void*)dcalc)   ;
     for(i=0 ; i<3 ; i++)
-        free((void*)TM[i]) ;
-    free((void**)TM)     ;
+    {
+        free((void*)evec3[i]);
+    }
+    free((void*)eval3);
+    free((void*)evec3);
     free((void*)opt.rms_in) ;
     free((void*)opt.rms_r)  ;
     free((void*)opt.p2p)    ;
@@ -301,7 +304,7 @@ void get_param2(char *file, struct_opt *opt, struct_quake_params *eq)
     opt->ref_flag = get_cmtf(eq,opt->ref_flag+1)-1 ;
     for(i=0 ; i<nimas ; i++)
         free((void*)keys[i]) ;
-    free((void**) keys )   ;
+    free((void*) keys )   ;
 }  
 
 void dispsynt(char **argv)

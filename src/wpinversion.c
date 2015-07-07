@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
 {
     int i,j,M;
     double s2, d2, r2;
-    double *eval3,*data_norm, **TM ;
+    double *eval3,*data_norm ;
+    double **evec3;
     double **data,**rms,***G = NULL,***dcalc ;  
     double sdrM0[4];
     char **sacfiles ;
@@ -68,33 +69,27 @@ int main(int argc, char *argv[])
     struct_opt opt       ;
     sachdr    *hd_synt  ;
     struct_quake_params eq ;   
- 
     /* Allocate memory for input parameters */
     eq.wp_win4  = double_alloc(4) ;
     eq.vm    = double_alloc2p(2)  ;
     eq.vm[0] = double_calloc(NM)  ; 
     eq.vm[1] = double_calloc(NM)  ;
-    TM       = double_alloc2(3,3) ;
     eval3    = double_alloc(3)    ;
-
+    evec3    = double_alloc2(3,3) ;
     /* Initialize some pointers */
     data       = NULL ; G       = NULL ; opt.wgt = NULL ;
     opt.rms_in = NULL ; opt.p2p = NULL ; opt.avg = NULL ;
     sacfiles   = NULL ; opt.rms_r = NULL ;
-
     /* Get input parameters */
     get_param1(argc, argv, &M, &opt, &eq);
     get_param2(opt.i_master, &opt, &eq);
     fflush(stdout);  
-
     /* Write log header     */
     o_log = openfile_wt(opt.log);
     w_log_header(argv, &opt, &eq, eq.wp_win4, o_log);
-
     /* Set G and data       */
     set_matrices (&sacfiles,&hd_synt,&data,&G,&opt,&eq,o_log); 
     fflush(stdout);
-
     /* Screening            */
     if (opt.med_val > 0.) 
     {
@@ -116,17 +111,15 @@ int main(int argc, char *argv[])
     printf("%4d accepted_channels (%d rejected)\n",eq.nsac,eq.nsini - eq.nsac);
     fprintf(o_log,"accepted_channels: %4d (%d rejected)\n",eq.nsac,eq.nsini - eq.nsac);
     fflush(o_log);
-
     /* RMS per channel*/
     data_norm = double_alloc(eq.nsac);
     calc_data_norm(data,hd_synt,eq.nsac,data_norm);
-
     /* Inversion      */
     eq.global_rms = double_calloc(2*(opt.ref_flag+1)) ;
     if (opt.dc_flag) /* Double Couple inversion               */
     {              /* Warning: This has not been fully tested */
         inversion(M,hd_synt,G,data,&opt,NULL, &eq);
-        get_planes(eq.vm[0],TM,eval3,&sdrM0[0],&sdrM0[1],&sdrM0[2],&s2,&d2,&r2);
+        get_planes(eq.vm[0],eval3,evec3,&sdrM0[0],&sdrM0[1],&sdrM0[2],&s2,&d2,&r2);
         sdrM0[3] = (fabs(eval3[0]) + fabs(eval3[2])) / 2.;
         for(i=0;i<opt.ip;i++)
             sdrM0[opt.ib[i]-1] = opt.priorsdrM0[opt.ib[i]-1];
@@ -136,16 +129,13 @@ int main(int argc, char *argv[])
     }
     else
         inversion(M,hd_synt,G,data,&opt,o_log, &eq);
-  
     /* Predicted data  */
     dcalc = double_alloc3p(eq.nsac);
     calc_data(eq.nsac,hd_synt,G,eq.vm,data,dcalc,&opt,o_log);
-
     /* Get RMS and Gap */
     rms = double_calloc2(eq.nsac, 2*(opt.ref_flag+1));
     calc_rms(eq.nsac,hd_synt,data,dcalc,rms,eq.global_rms,&opt);
     w_o_saclst(eq.nsac,sacfiles,hd_synt,rms,data_norm,&opt); 
-
     /* Output */
     output_products(&opt,&eq,hd_synt,o_log,argv);
     fclose(o_log);
@@ -154,8 +144,7 @@ int main(int argc, char *argv[])
     free((void*)eq.wp_win4);
     free((void*)eq.vm[0]);
     free((void*)eq.vm[1]);
-    free((void**)eq.vm);
-    free((void*)eval3);
+    free((void*)eq.vm);
     free((void*)data_norm);
     for(i=0 ; i<eq.nsac ; i++)
     {
@@ -165,17 +154,20 @@ int main(int argc, char *argv[])
         free_G(&G[i]);
         for(j=0 ; j<(opt.ref_flag+1) ; j++)
 	    free((void*)dcalc[i][j]);
-        free((void**)dcalc[i]);
+        free((void*)dcalc[i]);
     }
-    free((void**)data);
-    free((void**)rms );
-    free((void**)sacfiles);
-    free((void***)G);
-    free((void***)dcalc);
+    free((void*)data);
+    free((void*)rms );
+    free((void*)sacfiles);
+    free((void*)G);
+    free((void*)dcalc);
   
     for(i=0 ; i<3 ; i++)
-        free((void*)TM[i]);
-    free((void**)TM);
+    {
+        free((void*)evec3[i]);
+    }
+    free((void*)eval3);
+    free((void*)evec3);
   
     free((void*)opt.rms_in);
     free((void*)opt.rms_r);
@@ -217,7 +209,7 @@ void get_param2(char *file, struct_opt *opt, struct_quake_params *eq)
   
     for(i=0 ; i<nimas ; i++)
         free((void*)keys[i]);
-    free((void**) keys );
+    free((void*) keys );
 }  
 
 void dispsynt(char **argv)
