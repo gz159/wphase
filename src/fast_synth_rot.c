@@ -173,8 +173,8 @@ int main(int argc, char **argv)
         free((void *) stats[j]) ;
         free((void *) nets[j])  ;
     }
-    free((void **) stats) ;
-    free((void **) nets)  ;
+    free((void *) stats) ;
+    free((void *) nets)  ;
     free((void *) stlats) ;
     free((void *) stlons) ;
     if(tapering == YES) 
