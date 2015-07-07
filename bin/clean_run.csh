@@ -11,6 +11,7 @@ set LIST = "       i_wpinversion coeffs_rec_lut dec_bp_dat_fil_list i_seedfiles 
 set LIST = "$LIST  o_wpinversion upd_dec_bp_dat_fil_list rot_dec_bp_dat_fil_list"
 set LIST = "$LIST  scr_dat_fil_list syn_fil_list coeffs_rec_lut  dec_bp_dat_fil_list"
 set LIST = "$LIST  i_wpinversion  rdseed.err_log wtraces.pdf Gd wp_pages_6t.pdf  wp_pages.pdf"
+set LIST = "$LIST  wpinversion_gs.ini  wpinversion.ini"
 foreach file ($LIST)
    if ( -e $file ) ${RM} $file
 end
