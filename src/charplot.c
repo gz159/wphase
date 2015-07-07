@@ -139,7 +139,7 @@ int charplot(double *M, double strike1, double dip1, double strike2, double dip2
     }
     for(jx=0;jx<2*ry+1;jx++)
         free((void*)figure[jx]);
-    free((void**)figure);
+    free((void*)figure);
     return(1);
 }
 

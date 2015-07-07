@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
     free((void *)id);
     for(i=0; i<n; i++)
         free((void *)ids[i]);
-    free((void**)ids);
+    free((void *)ids);
     free((void *)c1);
     free((void *)c2);
     free((void *)c3);
@@ -251,7 +251,7 @@ void get_filt_params(char *file, struct_quake_params *eq)
     get_i_master(file,keys,6,eq) ;
     for(i=0 ; i<6 ; i++)
        free((void*)keys[i]) ;
-    free((void**) keys )   ;
+    free((void*) keys )   ;
 }
 
 void makeid(char *id, sachdr *hdr)

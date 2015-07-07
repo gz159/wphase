@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
     free((void *)sacfile);
     for(i=0;i<nbsta;i++)
         free((void *)sfiles[i]);
-    free((void**)sfiles);
+    free((void*)sfiles);
     free((void *)itype);
     free((void *)b1);
     free((void *)b2);
@@ -320,6 +320,6 @@ void get_params(int argc, char **argv, char **i_sacs, char **itype, char **i_mas
     printf("GFDIR: %s\n",eq->gf_dir); 
     for(i=0 ; i<nimas ; i++)
         free((void*)keys[i]) ;
-    free((void**) keys )   ;
+    free((void*) keys )   ;
 }
 

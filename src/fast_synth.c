@@ -156,10 +156,10 @@ int main(int argc, char **argv)
     free((void *) TH) ; 
     for(j=0; j<10; j++)
         free((void *)GFs[j]);
-    free((void**)GFs)       ;  
+    free((void *)GFs)       ;  
     free((void *)M1_cmt)    ;
     free((void *)M2_cmt)    ;
-    free((void**)eq.vm)     ;
+    free((void *)eq.vm)     ;
     free((void *)dists)     ;
     free((void *)azs)       ;
     free((void *)bazs)      ;

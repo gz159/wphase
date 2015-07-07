@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
     free((void*)PH);
     for(j=0;j<10;j++)
         free((void*)GFs[j]);
-    free((void**)GFs);
+    free((void*)GFs);
     free((void*)x_conv);
     free((void*)b1);
     free((void*)b2);
@@ -234,7 +234,7 @@ void get_params(char *file, struct_quake_params *eq)
 
     for(i=0 ; i<5 ; i++)
         free((void*)keys[i]) ;
-    free((void**) keys )   ;
+    free((void*) keys )   ;
 }
 
 

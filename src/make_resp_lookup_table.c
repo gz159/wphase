@@ -145,7 +145,7 @@ void get_params(char *file, struct_quake_params *eq)
     get_i_master(file, keys, 1, eq) ;
   
     free((void*)keys[0]) ;
-    free((void**) keys ) ;
+    free((void*) keys ) ;
 }  
 
 

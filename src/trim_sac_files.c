@@ -227,7 +227,7 @@ void get_params(int argc, char **argv, int *un, char **i_sacs, char **o_sacs,
     /* Memory Freeing */
     for(i=0 ; i<4 ; i++)
         free((void*)keys[i]) ;
-    free((void**) keys )   ;
+    free((void*) keys )   ;
     free((void*) i_tmp )   ;
 }
 

@@ -165,10 +165,10 @@ int main(int argc, char **argv)
     free((void*)x_conv);
     for(i=0; i<10; i++)
         free((void *)GFs[i]) ;
-    free((void**)GFs)      ;  
+    free((void*)GFs)      ;  
     free((void*)eq.vm[0])  ;
     free((void*)eq.vm[1])  ;
-    free((void**)eq.vm)    ;
+    free((void*)eq.vm)    ;
     free((void*)dists)     ;
     free((void*)azs)       ;
     free((void*)bazs)      ;
@@ -178,8 +178,8 @@ int main(int argc, char **argv)
         free((void*)stats[i]) ;
         free((void*)nets[i])  ;
     }
-    free((void**)stats) ;
-    free((void**)nets)  ;
+    free((void*)stats) ;
+    free((void*)nets)  ;
     free((void*)stlats) ;
     free((void*)stlons) ;
     if(tapering == YES) 
@@ -380,6 +380,6 @@ void get_params(int argc, char **argv, char *stat_file, char *itype,
     printf("GFDIR: %s\n",eq->gf_dir); 
     for(i=0 ; i<nimas ; i++)
         free((void*)keys[i]) ;
-    free((void**) keys )   ;
+    free((void*) keys )   ;
 }
 
