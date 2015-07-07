@@ -265,7 +265,7 @@ def main(argv):
     ths = '5.0 3.0 0.9'
     if 'RMS_SCREENING' in iconfig:
         ths = iconfig['RMS_SCREENING']
-    comments = [VERSION,'GF_PATH: '+GF_PATH,'Screening: '+Median+ths]
+    comments = ['GF_PATH: '+GF_PATH,'Screening: '+Median+ths]
 
     # Read reference CMTFILE
     eq   = EarthQuake()

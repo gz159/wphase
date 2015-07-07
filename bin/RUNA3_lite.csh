@@ -35,15 +35,13 @@ ${MKDIR} SYNTH;
 $PREPARE
 if $status exit 1
 
-set version = "Version: "
-if ( -e $WPHASE_HOME/.svn/entries ) set version = "${version}`$HEAD -4 $WPHASE_HOME/.svn/entries | $TAIL -1`"
 set screening = "Screening: $median"
 set comgfdir  = "GF_PATH: $GF_PATH"
 
 $ECHO "COMMAND LINE: $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -pdata fort.15.noth $median \
-	${my_argv} -comment '$version' -comment '$screening' -comment '$comgfdir'"
+	${my_argv} -comment '$screening' -comment '$comgfdir'"
 $WPINVER -log LOG/wpinversion.noth.log -osyndir SYNTH -pdata fort.15.noth $median \
-	${my_argv} -comment "$version" -comment "$screening" -comment "$comgfdir"
+	${my_argv} -comment "$screening" -comment "$comgfdir"
 
 ${CP} p_wpinversion.ps p_wpinversion.noth.ps
 ${CP} o_wpinversion o_wpinversion.noth
@@ -57,11 +55,11 @@ foreach th ($ths)
     $ECHO -e "\nCOMMAND LINE: $WPINVER -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
 	-log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th} \
 	-osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -old ${my_argv} \
-	-comment '$version' -comment '$screening' -comment '$comgfdir'" 
+	-comment '$screening' -comment '$comgfdir'" 
     $WPINVER -th ${th} -ifil o_wpinversion -ofil o_wpinv.th_${th} \
     -log LOG/wpinversion.th_${th}.log -ps p_wpinversion.th_${th}.ps \
     -osyndir SYNTH -ocmtf  WCMTSOLUTION.th_${th} -old ${my_argv} \
-	-comment "$version" -comment "$screening" -comment "$comgfdir" 
+	-comment "$screening" -comment "$comgfdir" 
     if $status exit 1
     ${CP} -f o_wpinv.th_$th o_wpinversion
 end
