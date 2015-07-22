@@ -66,10 +66,6 @@
 #include <omp.h>
 #endif
 
-#ifndef TWPTT
-#define TWPTT 1
-#endif
-
 #ifndef NCOM
 #define NCOM 50
 #endif
@@ -96,7 +92,7 @@ typedef struct
 } struct_opt ;
 
 /* Screening routines */
-void screen_med(int *nsac, char **data_name, double **data, 
+void screen_med(struct_quake_params *eq, char **data_name, double **data, 
 		double ***G, sachdr *hd_synt, struct_opt *opt, FILE *o_log) ;
 void screen_rms(int *nsac, char **data_name, double **data, 
 		double ***G, sachdr *hd_synt, struct_opt *opt, FILE *o_log) ;
@@ -119,7 +115,7 @@ void eigsrt(double *d, double **v, int n) ;
 void free_G(double ***G) ;
 int  fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts, 
 	    double Ptt, double twp_beg, double twp_end, double *buffer, double *G, 
-	    struct_opt *opt, FILE *o_log) ;
+	    struct_opt *opt, FILE *o_log, int twptt) ;
 void comp_GtG(int M, int nsac, sachdr *hd_synt, double ***G, double **GtG, 
 	      struct_opt *opt) ;
 void inversion(int M, sachdr *hd_synt, double ***G, double **d, 
@@ -174,7 +170,7 @@ void get_depths(char *path, double *depths, int *nd);
 void rotate_traces(double *T, double *P, float baz, int npts, double *S);
 
 int fill_kernel_G(sachdr *hd_GF,sachdr *hd_data,double Ptt,double twp_beg, 
-		  double twp_end,double *elem_disp,double *G,struct_opt *opt,FILE *o_log);
+		  double twp_end,double *elem_disp,double *G,struct_opt *opt,FILE *o_log, int twptt);
 
 void calc_kernel(struct_quake_params *eq,struct_opt *opt,sachdr *hd_synth,char *itype,
 		 int nd,double *dv,double *tv, double ***G,FILE *o_log);

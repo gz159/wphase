@@ -194,6 +194,23 @@ def disphelp():
 
 
 def main(argv):
+    # Parameters
+    TS_NIT   = 3  # Nb of iterations
+    TS_DT    = 4. # Initial time step
+    TSBOUNDS = [] # Bounds (empty=automatically determined from mb or Ms in the PDE line)
+
+    XY_NIT   = 3   # Nb of iterations
+    XY_DX    = 0.4 # Initial samp. period
+    XY_NX    = 3   # Half_width = XY_NX*XY_DX
+    XY_NOPT  = 5   # Nb of optimal-points
+
+    XYZ_NIT   = 1    # Nb of iterations
+    XYZ_DX    = 0.6  # Initial samp. period
+    XYZ_NX    = 1    # Half_width = XYZ_NX*XYZ_DX (if XYZ_NX=0: no Lat/Lon grid-seach is performed)
+    XYZ_NOPT  = 4    # Nb of optimal-points
+    DDEP      = 50.  # Delta depth ( Z_SEARCH within Z_INITIAL +/- DDEP )
+    MINDEP    = 11.5 
+
     # Extract command line options
     try:
         opts, args = getopt.gnu_getopt(argv[1:],'stpSdi:nhz',["hdsafe","onlyts","onlyxy","npar",
@@ -256,6 +273,35 @@ def main(argv):
     iconfig = utils.parseConfig(i_master)
     cmtref  = iconfig['CMTFILE']
     evname  = iconfig['EVNAME'].replace(' ','_').replace(',','')
+
+    if iconfig.has_key('TS_NIT'):
+        TS_NIT   = iconfig['TS_NIT']
+    if iconfig.has_key('TS_DT'):
+        TS_DT    = iconfig['TS_DT']
+    if iconfig.has_key('TSBOUNDS'):
+        TSBOUNDS = iconfig['TSBOUNDS']
+
+    if iconfig.has_key('XY_NIT'):
+        XY_NIT   = iconfig['XY_NIT']
+    if iconfig.has_key('XY_DX'):
+        XY_DX    = iconfig['XY_DX']
+    if iconfig.has_key('XY_NX'):
+        XY_NX    = iconfig['XY_NX']
+    if iconfig.has_key('XY_NOPT'):
+        XY_NOPT  = iconfig['XY_NOPT']
+
+    if iconfig.has_key('XYZ_NIT'):
+        XYZ_NIT  = iconfig['XYZ_NIT']
+    if iconfig.has_key('XYZ_DX'):
+        XYZ_DX   = iconfig['XYZ_DX']
+    if iconfig.has_key('XYZ_NX'):
+        XYZ_NX   = iconfig['XYZ_NX']
+    if iconfig.has_key('XYZ_NOPT'):
+        XYZ_NOPT = iconfig['XYZ_NOPT']
+    if iconfig.has_key('DDEP'):
+        DDEP     = iconfig['DDEP']
+    if iconfig.has_key('MINDEP'):
+        MINDEP   = iconfig['MINDEP']
 
     # Set comments in output ps file
     Median    = '-med '

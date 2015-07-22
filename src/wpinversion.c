@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     if (opt.med_val > 0.) 
     {
         median(eq.nsac, &opt);
-        screen_med(&eq.nsac, sacfiles, data, G, hd_synt, &opt, o_log); 
+        screen_med(&eq, sacfiles, data, G, hd_synt, &opt, o_log); 
     }
     if (opt.th_val > 0.)
         screen_rms(&eq.nsac, sacfiles, data, G, hd_synt, &opt, o_log);
@@ -185,24 +185,37 @@ void get_param2(char *file, struct_opt *opt, struct_quake_params *eq)
     char **keys;
     if (strlen(eq->gf_dir) == 0)
     {
-        nimas = 10;
+        nimas = 23;
         keys = char_alloc2(nimas, 16);
         strcpy(keys[i++],"GFDIR");
     }
     else
     {
-        nimas = 9;
+        nimas = 22;
         keys = char_alloc2(nimas, 16) ;
     }
-    strcpy(keys[i++],"EVNAME");
-    strcpy(keys[i++],"CMTFILE");
-    strcpy(keys[i++],"WP_WIN");
-    strcpy(keys[i++],"DMIN");
-    strcpy(keys[i++],"DMAX");
-    strcpy(keys[i++],"filt_order");
-    strcpy(keys[i++],"filt_cf1");
-    strcpy(keys[i++],"filt_cf2");
-    strcpy(keys[i++],"filt_pass");
+    strcpy(keys[i++],"EVNAME")     ;
+    strcpy(keys[i++],"SEED")       ;
+    strcpy(keys[i++],"CMTFILE")    ;
+    strcpy(keys[i++],"WP_WIN")     ;
+    strcpy(keys[i++],"DMIN")       ;
+    strcpy(keys[i++],"DMAX")       ;
+    strcpy(keys[i++],"filt_order") ;
+    strcpy(keys[i++],"filt_cf1")   ;
+    strcpy(keys[i++],"filt_cf2")   ;
+    strcpy(keys[i++],"filt_pass")  ;
+    strcpy(keys[i++],"TWPTT")      ;
+    strcpy(keys[i++],"p2p_fac_min");
+    strcpy(keys[i++],"p2p_fac_max");
+    strcpy(keys[i++],"LENGTH_GLOBAL")  ;
+    strcpy(keys[i++],"LENGTH_REGIONAL");
+    strcpy(keys[i++],"DLAT")           ;
+    strcpy(keys[i++],"DLON")           ;
+    strcpy(keys[i++],"OPDFFILE")       ;
+    strcpy(keys[i++],"YLIM_AUTO")      ;
+    strcpy(keys[i++],"YLIMFIXED")      ;
+    strcpy(keys[i++],"NC")             ;
+    strcpy(keys[i++],"NL")             ;
 
     get_i_master(file,keys,nimas,eq);
     opt->ref_flag = get_cmtf(eq,opt->ref_flag+1) - 1;

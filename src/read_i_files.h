@@ -48,8 +48,12 @@ typedef struct
   double *wp_win4, **vm   ;
   double *global_rms ;
   double Cond ;
-  int nsac, nsini ;
+  int nsac, nsini, twptt ;
   double R_evla, R_evlo, R_evdp, R_ts, R_hd ;
+  double p2p_fac_min, p2p_fac_max ;
+  int    tr_length_global, tr_length_regional, tr_ylimfixed[2], tr_nc, tr_nl;
+  double tr_dlat, tr_dlon ;
+  char   tr_opdffile[__FSIZE__], tr_ylim_auto[5] ;
 } struct_quake_params ;
 
 

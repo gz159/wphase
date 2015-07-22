@@ -355,18 +355,10 @@ void get_i_master(file, keys, n, eq)
     line  = char_alloc(LSIZE) ;
     buf   = char_alloc(LSIZE) ;
 
-    /* Openning file            */
+    /* Opening file            */
     i_file = openfile_rt(file,&nl) ;
 
-    /* check nb of lines */
-    if (n > nl) 
-    {
-        fprintf(stderr,"ERROR : incomplete i_master file : %s\n", file) ;
-        fclose(i_file) ;
-        exit(1) ; 
-    }
-
-    /* Initialize DMIN and GFDIR */
+    /* Initialize DMIN, GFDIR, TWPTT, p2p_fac_min/max and traces.py parameters */
     nl = 0;
     for (i=0 ; i<n ; i++)
     {
@@ -379,6 +371,67 @@ void get_i_master(file, keys, n, eq)
         else if (strncmp("DMIN",keys[i],strlen(keys[i]))==0)
         {
             eq->dmin = 0. ;
+            nl++; 
+        }
+        else if (strncmp("TWPTT",keys[i],strlen(keys[i]))==0)
+        {
+            eq->twptt = 1 ;
+            nl++; 
+        }
+        else if (strncmp("p2p_fac_min",keys[i],strlen(keys[i]))==0)
+        {
+            eq->p2p_fac_min = 0.1 ;
+            nl++; 
+        }
+        else if (strncmp("p2p_fac_max",keys[i],strlen(keys[i]))==0)
+        {
+            eq->p2p_fac_max = 3.0 ;
+            nl++; 
+        }
+        else if (strncmp("LENGTH_GLOBAL",keys[i],strlen(keys[i]))==0)
+        {
+            eq->tr_length_global = 3000 ;
+            nl++; 
+        }
+        else if (strncmp("LENGTH_REGIONAL",keys[i],strlen(keys[i]))==0)
+        {
+            eq->tr_length_regional = 1500 ;
+            nl++; 
+        }
+        else if (strncmp("DLAT",keys[i],strlen(keys[i]))==0)
+        {
+            eq->tr_dlat = 20. ;
+            nl++; 
+        }
+        else if (strncmp("DLON",keys[i],strlen(keys[i]))==0)
+        {
+            eq->tr_dlon = 20. ;
+            nl++; 
+        }
+        else if (strncmp("OPDFFILE",keys[i],strlen(keys[i]))==0)
+        {
+            strcpy(eq->tr_opdffile, "wp_pages.pdf") ;
+            nl++; 
+        }
+        else if (strncmp("YLIM_AUTO",keys[i],strlen(keys[i]))==0)
+        {
+            strcpy(eq->tr_ylim_auto, "True") ;
+            nl++; 
+        }
+        else if (strncmp("YLIMFIXED",keys[i],strlen(keys[i]))==0)
+        {
+            eq->tr_ylimfixed[0] = -9;
+            eq->tr_ylimfixed[1] = 12;
+            nl++; 
+        }
+        else if (strncmp("NC",keys[i],strlen(keys[i]))==0)
+        {
+            eq->tr_nc = 3 ;
+            nl++; 
+        }
+        else if (strncmp("NL",keys[i],strlen(keys[i]))==0)
+        {
+            eq->tr_nl = 5 ;
             nl++; 
         }
     }
@@ -471,7 +524,7 @@ void get_i_master(file, keys, n, eq)
                     nb2+= 6+nb_blank(&line[nb2+6])+1            ;
                     tmp = sscanf (&line[nb2], "%lf %lf %d %lf", 
                               &eq->fl, &eq->fh, 
-                              &eq->nf, &eq->tol)            ;
+                              &eq->nf, &eq->tol)                ;
                     check_scan(4, tmp, file, i_file)            ;
                     nl++;   
                 }
@@ -488,6 +541,78 @@ void get_i_master(file, keys, n, eq)
                     decode_wp_win(&line[nb2], eq->wp_win4) ;
                     nl++;   
                 }
+                else if (strncmp(&line[nb2],"TWPTT",5)==0) 
+                {
+                    nb2+= 5+nb_blank(&line[nb2+5])+1             ;
+                    tmp = sscanf (&line[nb2], "%d", &eq->twptt)  ;
+                    check_scan(1, tmp, file, i_file)             ;
+                }
+                else if (strncmp(&line[nb2],"p2p_fac_min",11)==0) 
+                {
+                    nb2+= 11+nb_blank(&line[nb2+11])+1                 ;
+                    tmp = sscanf (&line[nb2], "%lf", &eq->p2p_fac_min) ;
+                    check_scan(1, tmp, file, i_file)                   ;
+                }
+                else if (strncmp(&line[nb2],"p2p_fac_max",5)==0) 
+                {
+                    nb2+= 11+nb_blank(&line[nb2+11])+1                 ;
+                    tmp = sscanf (&line[nb2], "%lf", &eq->p2p_fac_max) ;
+                    check_scan(1, tmp, file, i_file)                   ;
+                }
+                else if (strncmp(&line[nb2],"LENGTH_GLOBAL",13)==0)
+                {
+                    nb2+= 13+nb_blank(&line[nb2+13])+1                     ;
+                    tmp = sscanf (&line[nb2], "%d", &eq->tr_length_global) ;
+                    check_scan(1, tmp, file, i_file)                       ;
+                }
+                else if (strncmp(&line[nb2],"LENGTH_REGIONAL",15)==0)
+                {
+                    nb2+= 15+nb_blank(&line[nb2+15])+1                       ;
+                    tmp = sscanf (&line[nb2], "%d", &eq->tr_length_regional) ;
+                    check_scan(1, tmp, file, i_file)                         ;
+                }
+                else if (strncmp(&line[nb2],"DLAT",4)==0)
+                {
+                    nb2+= 4+nb_blank(&line[nb2+4])+1               ;
+                    tmp = sscanf (&line[nb2], "%lf", &eq->tr_dlat) ;
+                    check_scan(1, tmp, file, i_file)               ;
+                }
+                else if (strncmp(&line[nb2],"DLON",4)==0)
+                {
+                    nb2+= 4+nb_blank(&line[nb2+4])+1               ;
+                    tmp = sscanf (&line[nb2], "%lf", &eq->tr_dlon) ;
+                    check_scan(1, tmp, file, i_file)               ;
+                }
+                else if (strncmp(&line[nb2],"OPDFFILE",8)==0)
+                {
+                    nb2+= 8+nb_blank(&line[nb2+8])+1                   ;
+                    tmp = sscanf (&line[nb2], "%s", eq->tr_opdffile)  ;
+                    check_scan(1, tmp, file, i_file)                   ;
+                }
+                else if (strncmp(&line[nb2],"YLIM_AUTO",9)==0)
+                {
+                    nb2+= 9+nb_blank(&line[nb2+9])+1                    ;
+                    tmp = sscanf (&line[nb2], "%s", eq->tr_ylim_auto) ;
+                    check_scan(1, tmp, file, i_file)                    ; 
+                }
+                else if (strncmp(&line[nb2],"YLIMFIXED",9)==0)
+                {
+                    nb2+= 9+nb_blank(&line[nb2+9])+1                    ;
+                    tmp = sscanf (&line[nb2], "%d %d", &eq->tr_ylimfixed[0], &eq->tr_ylimfixed[1]) ;
+                    check_scan(1, tmp, file, i_file)                    ;
+                }
+                else if (strncmp(&line[nb2],"NC",2)==0)
+                {
+                    nb2+= 2+nb_blank(&line[nb2+2])+1            ;
+                    tmp = sscanf (&line[nb2], "%d", &eq->tr_nc) ;
+                    check_scan(1, tmp, file, i_file)            ; 
+                }
+                else if (strncmp(&line[nb2],"NL",2)==0)
+                {
+                    nb2+= 2+nb_blank(&line[nb2+2])+1            ;
+                    tmp = sscanf (&line[nb2], "%d", &eq->tr_nl) ;
+                    check_scan(1, tmp, file, i_file)            ; 
+                }
             } /* endif */
     } /* endwhile */
 
@@ -496,6 +621,7 @@ void get_i_master(file, keys, n, eq)
     /* Check nl */
     if (n > nl)  
     {
+        fprintf(stderr, "n = %d, nl=%d \n", n, nl);
         fprintf(stderr,"ERROR 2 : incomplete i_master file : %s\n", file) ;
         exit(1) ; 
     }

@@ -123,6 +123,39 @@ class InvalidOption(Exception):
 
 
 def main(argv):
+    # Parameters
+    LENGTH_GLOBAL   = 3000 ;        # Traces length (teleseismic data)
+    LENGTH_REGIONAL = 1500 ;        # Traces length (regional data)
+    DLAT,DLON       = 20.,20.
+    OPDFFILE        = 'wp_pages.pdf'
+    YLIM_AUTO = True
+    YLIMFIXED = [-9,12] # Y lim if YLIM_AUTO = False
+    NC = 3 # Number of columns
+    NL = 5 # Number of lines
+
+    # Read i_master
+    conf  = utils.parseConfig(imaster)
+    if conf.has_key('LENGTH_GLOBAL'):
+        LENGTH_GLOBAL   = conf['LENGTH_GLOBAL']
+    if conf.has_key('LENGTH_REGIONAL'):
+        LENGTH_REGIONAL = conf['LENGTH_REGIONAL']
+    if conf.has_key('DLAT'):
+        DLAT            = conf['DLAT']
+    if conf.has_key('DLON'):
+        DLON            = conf['DLON']
+    if conf.has_key('OPDFFILE'):
+        OPDFFILE        = conf['OPDFFILE']
+    if conf.has_key('TRACES_FIGSIZE'):
+        TRACES_FIGSIZE  = conf['TRACES_FIGSIZE']
+    if conf.has_key('YLIM_AUTO'):
+        YLIM_AUTO       = conf['YLIM_AUTO']
+    if conf.has_key('YLIMFIXED'):
+        YLIMFIXED       = conf['YLIMFIXED']
+    if conf.has_key('NC'):
+        NC              = conf['NC']
+    if conf.has_key('NL'):
+        NL              = conf['NL']
+
     # Input parameters
     imaster = IMASTER
     length  = LENGTH_GLOBAL
@@ -163,10 +196,9 @@ def main(argv):
 
     eq   = EarthQuake()
     eq.rcmtfile(solfile)
-    cmtla,cmtlo = eq.lat, eq.lon    
-        
+    cmtla,cmtlo = eq.lat, eq.lon   
+
     # Title
-    conf  = utils.parseConfig(imaster)
     title = '_'.join(conf['EVNAME'].split())
     title += ',  filter = (%s, %s, %s, %s)'%(conf['filt_cf1'],conf['filt_cf2'],conf['filt_order'],conf['filt_pass']) 
 

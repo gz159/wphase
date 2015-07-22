@@ -529,6 +529,28 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
         }
     }
 
+    // Complementary information
+    fprintf(o_ini, "\n;complementary information\n");
+    fprintf(o_ini, "SEED                 = %s\n", eq->seed);
+    fprintf(o_ini, "i_DMIN               = %f\n", eq->dmin);
+    fprintf(o_ini, "i_DMAX               = %f\n", eq->dmax);
+    fprintf(o_ini, "IDEC_2               = %d  %lf  %lf\n", eq->idtr, eq->preevent, eq->fend);
+    fprintf(o_ini, "IDEC_3               = %lf  %lf  %d  %lf\n", eq->fl, eq->fh, eq->nf, eq->tol);
+    fprintf(o_ini, "GFDIR                = %s\n", eq->gf_dir);
+    fprintf(o_ini, "TWPTT                = %d\n"   , eq->twptt);
+    fprintf(o_ini, "p2p_fac_min          = %2.1f\n", eq->p2p_fac_min);
+    fprintf(o_ini, "p2p_fac_max          = %2.1f\n", eq->p2p_fac_max);
+
+    fprintf(o_ini, "tr_LENGTH_GLOBAL     = %d\n", eq->tr_length_global);
+    fprintf(o_ini, "tr_LENGTH_REGIONAL   = %d\n", eq->tr_length_regional);
+    fprintf(o_ini, "tr_DLAT              = %f\n", eq->tr_dlat);
+    fprintf(o_ini, "tr_DLON              = %f\n", eq->tr_dlon);
+    fprintf(o_ini, "tr_OPDFFILE          = %s\n", eq->tr_opdffile);
+    fprintf(o_ini, "tr_YLIMAUTO          = %s\n", eq->tr_ylim_auto);
+    fprintf(o_ini, "tr_YLIMFIXED         = %d  %d\n", eq->tr_ylimfixed[0], eq->tr_ylimfixed[1]);
+    fprintf(o_ini, "tr_NC                = %d\n", eq->tr_nc);
+    fprintf(o_ini, "tr_NL                = %d\n", eq->tr_nl);
+
     // EPICENTER
     fprintf(o_ini, "\n;epicenter\n");
     fprintf(o_ini, "EPI_agency           = %-s\n",    strndup(eq->pdeline, 5));
@@ -543,7 +565,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     fprintf(o_ini, "EPI_depth            = %6.1f\n",  atof(strndup(eq->pdeline + 47, 5)));
     fprintf(o_ini, "EPI_M1               = %6.1f\n",  atof(strndup(eq->pdeline + 53, 3)));
     fprintf(o_ini, "EPI_M2               = %6.1f\n",  atof(strndup(eq->pdeline + 57, 3)));
-    fprintf(o_ini, "EPI_region           = %-s\n",    strndup(eq->pdeline + 61, 20));
+    fprintf(o_ini, "EPI_region           = %-s\n",    strndup(eq->pdeline + 61, 24));
 
     // CENTROID MOMENT TENSOR WCMT
     fprintf(o_ini, "\n;centroid_moment_tensor_WCMT\n");
@@ -553,11 +575,11 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     fprintf(o_ini, "W_Mrt                = %+14.6e\n", eq->vm[0][3]*(double)POW);
     fprintf(o_ini, "W_Mrp                = %+14.6e\n", eq->vm[0][4]*(double)POW);
     fprintf(o_ini, "W_Mtp                = %+14.6e\n", eq->vm[0][5]*(double)POW);
-    fprintf(o_ini, "W_time_shift         = %8.2f\n",  eq->ts);
-    fprintf(o_ini, "W_half_duration      = %8.2f\n",  eq->hd);
-    fprintf(o_ini, "W_latitude           = %8.2f\n",  eq->evla);
-    fprintf(o_ini, "W_longitude          = %8.2f\n",  eq->evlo);
-    fprintf(o_ini, "W_depth              = %8.2f\n",  eq->evdp);
+    fprintf(o_ini, "W_time_shift         = %10.4f\n",  eq->ts);
+    fprintf(o_ini, "W_half_duration      = %10.4f\n",  eq->hd);
+    fprintf(o_ini, "W_latitude           = %10.4f\n",  eq->evla);
+    fprintf(o_ini, "W_longitude          = %10.4f\n",  eq->evlo);
+    fprintf(o_ini, "W_depth              = %10.4f\n",  eq->evdp);
     fprintf(o_ini, "W_M0                 = %12.2e\n", M0a);
     fprintf(o_ini, "W_Mw                 = %7.2f\n",  Mwa);
     //fprintf(o_ini, "W_mom_12             = %-15.4e\n", M0_12a);
@@ -619,11 +641,11 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
         fprintf(o_ini, "R_Mrt                = %+14.6e\n", eq->vm[1][3]*(double)POW);
         fprintf(o_ini, "R_Mrp                = %+14.6e\n", eq->vm[1][4]*(double)POW);
         fprintf(o_ini, "R_Mtp                = %+14.6e\n", eq->vm[1][5]*(double)POW);
-        fprintf(o_ini, "R_time_shift         = %8.2f\n",  eq->R_ts);
-        fprintf(o_ini, "R_half_duration      = %8.2f\n",  eq->R_hd);
-        fprintf(o_ini, "R_latitude           = %8.2f\n",  eq->R_evla);
-        fprintf(o_ini, "R_longitude          = %8.2f\n",  eq->R_evlo);
-        fprintf(o_ini, "R_depth              = %8.2f\n",  eq->R_evdp);
+        fprintf(o_ini, "R_time_shift         = %10.4f\n",  eq->R_ts);
+        fprintf(o_ini, "R_half_duration      = %10.4f\n",  eq->R_hd);
+        fprintf(o_ini, "R_latitude           = %10.4f\n",  eq->R_evla);
+        fprintf(o_ini, "R_longitude          = %10.4f\n",  eq->R_evlo);
+        fprintf(o_ini, "R_depth              = %10.4f\n",  eq->R_evdp);
         fprintf(o_ini, "R_M0                 = %15.4e\n", M0b);
         fprintf(o_ini, "R_Mw                 = %5.2f\n",  Mwb);
         //fprintf(o_ini, "R_mom_12             = %15.4e\n", M0_12b);
@@ -645,9 +667,9 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
 
         // EIGENVALUES RCMT
         fprintf(o_ini, "\n;eigenvalues_RCMT\n");
-        fprintf(o_ini, "R_eig1               = %14.6e\n", eval3b[0]*(double)POW);
-        fprintf(o_ini, "R_eig2               = %14.6e\n", eval3b[1]*(double)POW);
-        fprintf(o_ini, "R_eig3               = %14.6e\n", eval3b[2]*(double)POW); 
+        fprintf(o_ini, "R_eig_T              = %14.6e\n", eval3b[0]*(double)POW);
+        fprintf(o_ini, "R_eig_N              = %14.6e\n", eval3b[1]*(double)POW);
+        fprintf(o_ini, "R_eig_P              = %14.6e\n", eval3b[2]*(double)POW); 
     }
 
 
@@ -662,11 +684,11 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     fprintf(o_ini, "\n;screening_parameters\n");
     if (opt->med_val ==1)
     {
-        fprintf(o_ini, "med_val              = %15.8e\n",        opt->med_val);
-        fprintf(o_ini, "p2p_med              = %15.8e\n",        opt->p2p_med);
-        fprintf(o_ini, "p2p_min              = %15.8e\n", 0.1 * (opt->p2p_med));
-        fprintf(o_ini, "p2p_max              = %15.8e\n", 3.0 * (opt->p2p_med));
-        fprintf(o_ini, "average              = %15.8e\n",        opt->p2p_med/2); 
+        fprintf(o_ini, "med_val              = %15.8e\n",                    opt->med_val);
+        fprintf(o_ini, "p2p_med              = %15.8e\n",                    opt->p2p_med);
+        fprintf(o_ini, "p2p_min              = %15.8e\n", eq->p2p_fac_min * (opt->p2p_med));
+        fprintf(o_ini, "p2p_max              = %15.8e\n", eq->p2p_fac_max * (opt->p2p_med));
+        fprintf(o_ini, "average              = %15.8e\n",                    opt->p2p_med/2); 
     }
     else
         fprintf(o_ini, "; (None)\n");
@@ -1637,7 +1659,7 @@ void free_G(double ***G)
 
 int fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int npts, 
        double Ptt, double twp_beg, double twp_end, double *buffer, double *G, 
-       struct_opt *opt, FILE *o_log)
+       struct_opt *opt, FILE *o_log, int twptt)
 {
     int i, ierror = 1 ;
     int n1_GF, n2_GF  ;
@@ -1655,7 +1677,7 @@ int fill_G(char *gf_file, char *datafile, sachdr *hd_GF, sachdr *hd_data, int np
     }
     /* GF Time Window */
     t0 = (double)hd_GF->o ;
-    if (TWPTT)
+    if (twptt == 1)
         t0 += Ptt ;
     else
         t0 += opt->ts;
@@ -1806,7 +1828,7 @@ void set_matrices (char ***sacfiles,sachdr **hd_synt,double ***data,
         trav_time(gcarc,tv,dv,nd,&Ptt,&ierror) ;
         wp_time_window(gcarc, eq->wp_win4, &twp_beg, &twp_end) ;
         t0 = (double)hd_data.o ;
-        if (TWPTT)
+        if (eq->twptt)
             t0 += Ptt ;
         else
             t0 += opt->ts;
@@ -1833,7 +1855,7 @@ void set_matrices (char ***sacfiles,sachdr **hd_synt,double ***data,
             strcat(gf_file,GF);
             free((void*) GF);
             flag = fill_G(gf_file, datafile, &hd_GF, &hd_data, npts, Ptt, twp_beg, twp_end, 
-                                          tmparray, (*G)[ns][j], opt, o_log) ;
+                          tmparray, (*G)[ns][j], opt, o_log, eq->twptt) ;
             if (flag)
                   break ;
         }
@@ -1979,14 +2001,14 @@ void screen_ratio(int *nsac,char **data_name,double **data,double ***G,sachdr *h
 }
 
 
-void screen_med(int *nsac, char **data_name, double **data, double ***G, 
+void screen_med(struct_quake_params *eq, char **data_name, double **data, double ***G, 
                    sachdr *hd_synt, struct_opt *opt, FILE *o_log)
 {
     int    j, newn ;
     double min, max, val ;
     
-    min = 0.1 * (opt->p2p_med) ;
-    max = 3.0 * (opt->p2p_med) ;
+    min = (eq->p2p_fac_min) * (opt->p2p_med) ;
+    max = (eq->p2p_fac_max) * (opt->p2p_med) ;
     
     if (o_log != NULL)
       {
@@ -1996,7 +2018,7 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
         fprintf(o_log,"   reject avg > : %15.8f\n",opt->p2p_med/2) ;
       }
     newn = 0 ;
-    for (j=0;j<*nsac;j++)
+    for (j=0;j<eq->nsac;j++)
       {
         val = opt->p2p[j];
         if ( (min < val) && (val < max) && (fabs(opt->avg[j]) < (opt->p2p_med)/2.) )
@@ -2025,7 +2047,7 @@ void screen_med(int *nsac, char **data_name, double **data, double ***G,
                     free_G(G+j)              ;
                   }
       }
-    *nsac = newn ;
+    eq->nsac = newn ;
 }
 
 
@@ -2127,7 +2149,7 @@ void load_kernel(struct_quake_params *eq,struct_opt *opt,sachdr *hd_synth,int ns
             strcat(gf_file,GF);
             free((void*) GF);
             flag = fill_G(gf_file,gf_file,&hd_GF,hd_synth+i,hd_synth[i].npts,Ptt,twp_beg,twp_end, 
-                                          tmparray,G[i][j],opt,o_log) ;
+                                          tmparray,G[i][j],opt,o_log, eq->twptt) ;
             if (flag)
             {
                 fflush(stdout);
@@ -2585,7 +2607,19 @@ void copy_eq(struct_quake_params *i_eq, struct_quake_params *o_eq)
     o_eq->R_hd   = i_eq->R_hd ;
     o_eq->R_evla = i_eq->R_evla ;
     o_eq->R_evlo = i_eq->R_evlo ;
-    o_eq->R_evdp = i_eq->R_evdp ;    
+    o_eq->R_evdp = i_eq->R_evdp ;  
+    o_eq->twptt       = i_eq->twptt       ;
+    o_eq->p2p_fac_min = i_eq->p2p_fac_min ;  
+    o_eq->p2p_fac_max = i_eq->p2p_fac_max ;
+    o_eq->tr_length_global   = i_eq->tr_length_global ;
+    o_eq->tr_length_regional = i_eq->tr_length_regional ;
+    memcpy(o_eq->tr_ylimfixed,i_eq->tr_ylimfixed,2*sizeof(int));
+    o_eq->tr_nc   = i_eq->tr_nc ;
+    o_eq->tr_nl   = i_eq->tr_nl ; 
+    o_eq->tr_dlat = i_eq->tr_dlat ;
+    o_eq->tr_dlon = i_eq->tr_dlon ; 
+    strcpy(o_eq->tr_opdffile,i_eq->tr_opdffile) ;
+    strcpy(o_eq->tr_ylim_auto,i_eq->tr_ylim_auto) ;
 }
 
 
@@ -3115,7 +3149,7 @@ void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char 
         trav_time(gcarc,tv,dv,nd,&Ptt, &ierror) ;
         wp_time_window(gcarc,eq->wp_win4,&twp_beg,&twp_end) ; 
         t0 = (double)hd_data.o ;
-        if (TWPTT)
+        if (eq->twptt)
             t0 += Ptt ;
         else
             t0 += opt->ts;
@@ -3240,7 +3274,7 @@ void make_chan_list(sachdr *hd_synth,int nsac, float **stlats,float **stlons)
 
 int fill_kernel_G(sachdr *hd_GF, sachdr *hd_data, double Ptt, double twp_beg, 
                           double twp_end, double *elem_disp, double *G, struct_opt *opt, 
-                          FILE *o_log)
+                          FILE *o_log, int twptt)
 {
     int i, npts   ;
     int n1_GF, n2_GF  ;
@@ -3258,7 +3292,7 @@ int fill_kernel_G(sachdr *hd_GF, sachdr *hd_data, double Ptt, double twp_beg,
     }
     /* GF Time Window */
     t0 = (double)hd_GF->o ;
-    if (TWPTT)
+    if (twptt)
         t0 += Ptt ;
     else
        t0 += opt->ts;
@@ -3385,7 +3419,7 @@ void calc_kernel(struct_quake_params *eq,struct_opt *opt,sachdr *hd_synth,char *
                 exit(1);
             }         
             filter_with_sos(gain,b1,b2,a1,a2,nsects,x_conv,hdr.npts) ; /* Apply sos */
-            flag2 = fill_kernel_G(&hdr,&(hd_synth[jsac]),Ptt,twp_beg,twp_end,x_conv,G[jsac][i],opt,o_log); 
+            flag2 = fill_kernel_G(&hdr,&(hd_synth[jsac]),Ptt,twp_beg,twp_end,x_conv,G[jsac][i],opt,o_log, eq->twptt); 
             if (flag2)
             {
                 fprintf(stderr,"*** ERROR: Incomplete green function for %s\n",hd_synth[jsac].kstnm) ;
