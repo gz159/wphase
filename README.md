@@ -1,76 +1,81 @@
-# W phase inversion 
+# Wphase inversion 
 
-[![GPLv3](https://www.gnu.org/graphics/gplv3-88x31.png)](https://www.gnu.org/licenses/)
+The Wphase package is an extensive source-inversion tool allowing rapid characterization of seismic sources and is a reliable and straightforward method to resolve first-order attributes of large earthquakes.   
 
-The Wphase package is an extensive source-inversion tool allowing rapid characterization of the seismic source and is a reliable and straightforward method to resolve first-order attributes of large earthquakes. 
+Main contributors are Z.Duputel, L.Rivera and H.Kanamori.
 
 Wphase is licensed under the GNU General Public License (GPL) v3.
 
-Main contributors are Z.Duputel, L.Rivera and H.Kanamori
-
 For a complete documentation, please refer to [the Wphase wiki page](http://wphase.unistra.fr/wiki/doku.php/wphase)
 
-## Dependencies
+## Citation
 
+If you use the W-phase package for your own research, please cite the following articles:
+
+* Z. Duputel, L. Rivera, H. Kanamori, and G. Hayes, 2012. W-phase fast source inversion for moderate to large earhquakes (1990 - 2010), Geophysical Journal International, v. 189, iss. 2, p. 1125-1147.
+* G.P. Hayes, L. Rivera   and H. Kanamori, 2009. Source inversion of the W phase: real-time implementation and extension to low magnitudes, Seismol. Res. Let., v. 3, 800-805.
+* H. Kanamori and L. Rivera, 2008. Source inversion of W phase: speeding tsunami warning, Geophys. J. Int., v. 175, 222-238.
+
+## Installation
+
+### Dependencies
+* csh shell
 * gcc, gfortran
-* rdseed 
-* python 
-* for MacOS users, it is necessary to install Coreutils which provide GNU Core Utilities. This can be done using fink,macports or homebrew 
-* (*optional; for graphical output*) python modules: Numpy, Matplotlib, Basemap and netCDF4.
-* (*optional; for graphical output*) GMT4
+* python2.7 (or later)
+* You have to install numpy, matplotlib, basemap and netCDF4 to run some python scripts which make figures.
+* rdseed
+* GMT4
 
+To install these dependencies on MacOs, [you can refer to this page](http://wphase.unistra.fr/wiki/doku.php/wphase:macos).
 
-## Building/Installing 
+### Building the code
 
-Add the following environnement variables to the '.tcshrc' file in your home directory (or alternativelly '.cshrc'/'.bashrc' depending on the shell you are using):
+To install the code, we must first setup a few environment variables. If you use csh or tcsh:
 
 ```
-setenv WPHASE_HOME 'path to W-phase inversion directory' 
-setenv GF_PATH     'path to Green's Functions data base' 
-setenv RDSEED      'path to the rdseed executable'
+setenv GMT_BIN      /path/to/gmt/bin
+setenv RDSEED       /path/to/rdseed/executable
+setenv GF_PATH      /path/to/greens/functions/database
+setenv WPHASE_HOME  /path/to/wphase/package
 ```
 
-(*optional, see bellow*) 
+If you use bash:
+
 ```
-setenv ETOPOFILE 'path to ETOPO netCDF file'
+export GMT_BIN=/path/to/gmt/bin
+export RDSEED=/path/to/rdseed/executable
+export GF_PATH=/path/to/greens/functions/database
+export WPHASE_HOME=/path/to/wphase/package
 ```
 
-We strongly advise to separate the ${WPHASE_HOME} directory
-(i.e. the directory containing "bin" and "src") from the run
-directories (i.e. containing data, and output files). This is
-to make easier further updates. A good idea could be also to 
-add ${WPHASE_HOME}/bin path to the $PATH of your shell.
+These variables are necessary both at installation time and at run time. In addition to these variables, it is handy to include the wphase bin directory into the PATH environment variable:
 
-Before compiling, 
+```
+setenv PATH         ${PATH}:$WPHASE_HOME/bin
+```
 
-* If you are using 32 bits libraries on a 64 architecture, please add the flag '-m32' to OPTFLAG. 
-* Be sure the environment variables described above are assigned.
+or in bash:
 
-Once all is ready, a simple 'make' or 'make -B' in $WPHASE_HOME/src/ 
-should then build the whole package.
+```
+export PATH=${PATH}:$WPHASE_HOME/bin
+```
 
-*OPTIONAL; to include the topography/bathymetry in the grid-search graphical output.*
+All theses variable assignment can be included in your .tcshrc or your .bashrc file.
 
+Once you have downloaded the last version of the W-phase package and that the above environment variables are properly defined. Then you can proceed as follows to compile the package:
 
-## Using ETOPO01 Global Relief Model
-
-ETOPO01 is a 1 arc-minute global relief model of the Earth's surface
-provided by Amante et al. (2009):  
-<http://www.ngdc.noaa.gov/mgg/global/global.html>
-
-If Basemap is installed, you can optionally draw ETOPO01 topography and
-bathymetry. To do so, the path to the ETOPO01 netCDF file must be
-assigned to the environment variable $ETOPOFILE which can be
-done in your .tcshrc fil (or .bachrc, .cshrc, etc.). The make_grids.py
-script have been fully tested for grid-registered netCDF file of the
-ETOPO1 bedrock file available at:  
-<http://www.ngdc.noaa.gov/mgg/global/relief/ETOPO1/data/bedrock/grid_registered/netcdf/ETOPO1_Bed_g_gmt4.grd.gz>
+```
+cd ${WPHASE_HOME}/src
+make -B
+```
 
 
-## References
-Amante, C. and B. W. Eakins, ETOPO1 1 Arc-Minute Global Relief Model:
-Procedures, Data Sources and Analysis. NOAA Technical Memorandum
-NESDIS NGDC-24, 19 pp, March 2009.
+## Development
+Development is hosten on GitHub in the [eost/wphase repository](https://github.com/eost/wphase).
 
+
+## How to run W-phase
+
+Instructions on how to run and use Wphase are available at the [Wphase wiki page](http://wphase.unistra.fr/wiki/doku.php/wphase).
 
 **Report bugs to: <zacharie.duputel@unistra.fr>**
