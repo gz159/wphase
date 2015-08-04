@@ -168,6 +168,7 @@ void rhdrsac(char *file, sachdr *hdr, int *ierror)
 {
     const int sz_of_f=4, sz_of_i=4;
     int i;
+    size_t bytes;
     FILE *f;
   
     if ((f=fopen(file,"rb"))==NULL)
@@ -180,78 +181,78 @@ void rhdrsac(char *file, sachdr *hdr, int *ierror)
         *ierror = 1 ;
         return;  
     }
-    fread(&hdr->delta,sz_of_f,1,f);
-    fread(&hdr->depmin,sz_of_f,1,f);
-    fread(&hdr->depmax,sz_of_f,1,f);
-    fread(&hdr->scale,sz_of_f,1,f);
-    fread(&hdr->odelta,sz_of_f,1,f);
-    fread(&hdr->b,sz_of_f,1,f);
-    fread(&hdr->e,sz_of_f,1,f);
-    fread(&hdr->o,sz_of_f,1,f);
-    fread(&hdr->a,sz_of_f,1,f);
-    fread(&hdr->internal1,sz_of_f,1,f);
+    bytes  = fread(&hdr->delta,sz_of_f,1,f);
+    bytes += fread(&hdr->depmin,sz_of_f,1,f);
+    bytes += fread(&hdr->depmax,sz_of_f,1,f);
+    bytes += fread(&hdr->scale,sz_of_f,1,f);
+    bytes += fread(&hdr->odelta,sz_of_f,1,f);
+    bytes += fread(&hdr->b,sz_of_f,1,f);
+    bytes += fread(&hdr->e,sz_of_f,1,f);
+    bytes += fread(&hdr->o,sz_of_f,1,f);
+    bytes += fread(&hdr->a,sz_of_f,1,f);
+    bytes += fread(&hdr->internal1,sz_of_f,1,f);
     for (i=0 ; i<10; i++)
-        fread(&hdr->t[i],sz_of_f,1,f);
-    fread(&hdr->f,sz_of_f,1,f);
+        bytes += fread(&hdr->t[i],sz_of_f,1,f);
+    bytes += fread(&hdr->f,sz_of_f,1,f);
     for (i=0 ; i<10; i++)
-        fread(&hdr->resp[i],sz_of_f,1,f);
-    fread(&hdr->stla,sz_of_f,1,f);
-    fread(&hdr->stlo,sz_of_f,1,f);
-    fread(&hdr->stel,sz_of_f,1,f);
-    fread(&hdr->stdp,sz_of_f,1,f);
-    fread(&hdr->evla,sz_of_f,1,f);
-    fread(&hdr->evlo,sz_of_f,1,f);
-    fread(&hdr->evel,sz_of_f,1,f);
-    fread(&hdr->evdp,sz_of_f,1,f);
-    fread(&hdr->mag,sz_of_f,1,f);
+        bytes += fread(&hdr->resp[i],sz_of_f,1,f);
+    bytes += fread(&hdr->stla,sz_of_f,1,f);
+    bytes += fread(&hdr->stlo,sz_of_f,1,f);
+    bytes += fread(&hdr->stel,sz_of_f,1,f);
+    bytes += fread(&hdr->stdp,sz_of_f,1,f);
+    bytes += fread(&hdr->evla,sz_of_f,1,f);
+    bytes += fread(&hdr->evlo,sz_of_f,1,f);
+    bytes += fread(&hdr->evel,sz_of_f,1,f);
+    bytes += fread(&hdr->evdp,sz_of_f,1,f);
+    bytes += fread(&hdr->mag,sz_of_f,1,f);
     for (i=0 ; i<10; i++)
-        fread(&hdr->user[i],sz_of_f,1,f);
-    fread(&hdr->dist,sz_of_f,1,f);
-    fread(&hdr->az,sz_of_f,1,f);
-    fread(&hdr->baz,sz_of_f,1,f);
-    fread(&hdr->gcarc,sz_of_f,1,f);
-    fread(&hdr->internal2,sz_of_f,1,f);
-    fread(&hdr->internal3,sz_of_f,1,f);
-    fread(&hdr->depmen,sz_of_f,1,f);
-    fread(&hdr->cmpaz,sz_of_f,1,f);
-    fread(&hdr->cmpinc,sz_of_f,1,f);
-    fread(&hdr->xminimum,sz_of_f,1,f);
-    fread(&hdr->xmaximum,sz_of_f,1,f);
-    fread(&hdr->yminimum,sz_of_f,1,f);
-    fread(&hdr->ymaximum,sz_of_f,1,f);  
+        bytes += fread(&hdr->user[i],sz_of_f,1,f);
+    bytes += fread(&hdr->dist,sz_of_f,1,f);
+    bytes += fread(&hdr->az,sz_of_f,1,f);
+    bytes += fread(&hdr->baz,sz_of_f,1,f);
+    bytes += fread(&hdr->gcarc,sz_of_f,1,f);
+    bytes += fread(&hdr->internal2,sz_of_f,1,f);
+    bytes += fread(&hdr->internal3,sz_of_f,1,f);
+    bytes += fread(&hdr->depmen,sz_of_f,1,f);
+    bytes += fread(&hdr->cmpaz,sz_of_f,1,f);
+    bytes += fread(&hdr->cmpinc,sz_of_f,1,f);
+    bytes += fread(&hdr->xminimum,sz_of_f,1,f);
+    bytes += fread(&hdr->xmaximum,sz_of_f,1,f);
+    bytes += fread(&hdr->yminimum,sz_of_f,1,f);
+    bytes += fread(&hdr->ymaximum,sz_of_f,1,f);  
     fseek(f,7*sz_of_f,SEEK_CUR);
-    fread(&hdr->nzyear,sz_of_i,1,f);  
-    fread(&hdr->nzjday,sz_of_i,1,f);  
-    fread(&hdr->nzhour,sz_of_i,1,f);
-    fread(&hdr->nzmin,sz_of_i,1,f);  
-    fread(&hdr->nzsec,sz_of_i,1,f);  
-    fread(&hdr->nzmsec,sz_of_i,1,f);  
-    fread(&hdr->nvhdr,sz_of_i,1,f);  
-    fread(&hdr->norid,sz_of_i,1,f);  
-    fread(&hdr->nevid,sz_of_i,1,f);
-    fread(&hdr->npts,sz_of_i,1,f); 
-    fread(&hdr->internal4,sz_of_i,1,f);  
-    fread(&hdr->nwfid,sz_of_i,1,f);
-    fread(&hdr->nxsize,sz_of_i,1,f);
-    fread(&hdr->nysize,sz_of_i,1,f);
+    bytes += fread(&hdr->nzyear,sz_of_i,1,f);  
+    bytes += fread(&hdr->nzjday,sz_of_i,1,f);  
+    bytes += fread(&hdr->nzhour,sz_of_i,1,f);
+    bytes += fread(&hdr->nzmin,sz_of_i,1,f);  
+    bytes += fread(&hdr->nzsec,sz_of_i,1,f);  
+    bytes += fread(&hdr->nzmsec,sz_of_i,1,f);  
+    bytes += fread(&hdr->nvhdr,sz_of_i,1,f);  
+    bytes += fread(&hdr->norid,sz_of_i,1,f);  
+    bytes += fread(&hdr->nevid,sz_of_i,1,f);
+    bytes += fread(&hdr->npts,sz_of_i,1,f); 
+    bytes += fread(&hdr->internal4,sz_of_i,1,f);  
+    bytes += fread(&hdr->nwfid,sz_of_i,1,f);
+    bytes += fread(&hdr->nxsize,sz_of_i,1,f);
+    bytes += fread(&hdr->nysize,sz_of_i,1,f);
     fseek(f,1*sz_of_i,SEEK_CUR);
-    fread(&hdr->iftype,sz_of_i,1,f);
-    fread(&hdr->idep,sz_of_i,1,f);
-    fread(&hdr->iztype,sz_of_i,1,f);
+    bytes += fread(&hdr->iftype,sz_of_i,1,f);
+    bytes += fread(&hdr->idep,sz_of_i,1,f);
+    bytes += fread(&hdr->iztype,sz_of_i,1,f);
     fseek(f,1*sz_of_i,SEEK_CUR);
-    fread(&hdr->iinst,sz_of_i,1,f);
-    fread(&hdr->istreg,sz_of_i,1,f);
-    fread(&hdr->ievreg,sz_of_i,1,f);
-    fread(&hdr->ievtyp,sz_of_i,1,f);
-    fread(&hdr->iqual,sz_of_i,1,f);
-    fread(&hdr->isynth,sz_of_i,1,f);
-    fread(&hdr->imagtyp,sz_of_i,1,f);
-    fread(&hdr->imagsrc,sz_of_i,1,f);
+    bytes += fread(&hdr->iinst,sz_of_i,1,f);
+    bytes += fread(&hdr->istreg,sz_of_i,1,f);
+    bytes += fread(&hdr->ievreg,sz_of_i,1,f);
+    bytes += fread(&hdr->ievtyp,sz_of_i,1,f);
+    bytes += fread(&hdr->iqual,sz_of_i,1,f);
+    bytes += fread(&hdr->isynth,sz_of_i,1,f);
+    bytes += fread(&hdr->imagtyp,sz_of_i,1,f);
+    bytes += fread(&hdr->imagsrc,sz_of_i,1,f);
     fseek(f,8*sz_of_i,SEEK_CUR);
-    fread(&hdr->leven,sz_of_i,1,f);
-    fread(&hdr->lpspol,sz_of_i,1,f);
-    fread(&hdr->lovrok,sz_of_i,1,f);
-    fread(&hdr->lcalda,sz_of_i,1,f);
+    bytes += fread(&hdr->leven,sz_of_i,1,f);
+    bytes += fread(&hdr->lpspol,sz_of_i,1,f);
+    bytes += fread(&hdr->lovrok,sz_of_i,1,f);
+    bytes += fread(&hdr->lcalda,sz_of_i,1,f);
     fseek(f,1*sz_of_i,SEEK_CUR);
     fgets(hdr->kstnm,9,f);
     fgets(hdr->kevnm,17,f);
@@ -273,6 +274,13 @@ void rhdrsac(char *file, sachdr *hdr, int *ierror)
     /* e */
     hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
     fclose(f);
+    /* Check bytes counter */
+    if ( bytes != 92 )
+      {
+        fprintf(stderr,"Error reading %s\n",file);
+        exit(1);
+      }
+
 }
 
 
