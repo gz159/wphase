@@ -2,7 +2,7 @@
 
 The Wphase package is an extensive source-inversion tool allowing rapid characterization of seismic sources and is a reliable and straightforward method to resolve first-order attributes of large earthquakes.   
 
-Main contributors are Z.Duputel, L.Rivera and H.Kanamori.
+Main contributors are Z.Duputel, L.Rivera and H.Kanamori (California Institute of Technology and Universite de Strasbourg / CNRS).
 
 Wphase is licensed under the GNU General Public License (GPL) v3.
 
