@@ -1,4 +1,4 @@
-# Wphase inversion 
+# Wphase 
 
 The Wphase package is an extensive source-inversion tool allowing rapid characterization of seismic sources and is a reliable and straightforward method to resolve first-order attributes of large earthquakes.   
 
