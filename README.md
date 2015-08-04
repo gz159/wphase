@@ -1,7 +1,14 @@
-# W phase inversion - Installation instructions
-**Z.Duputel, L.Rivera and H.Kanamori**
+# W phase inversion 
 
-For a complete documentation, please refer to <http://wphase.unistra.fr/wiki/doku.php/wphase>
+[![GPLv3](https://www.gnu.org/graphics/gplv3-88x31.png)](https://www.gnu.org/licenses/)
+
+The Wphase package is an extensive source-inversion tool allowing rapid characterization of the seismic source and is a reliable and straightforward method to resolve first-order attributes of large earthquakes. 
+
+Wphase is licensed under the GNU General Public License (GPL) v3.
+
+Main contributors are Z.Duputel, L.Rivera and H.Kanamori
+
+For a complete documentation, please refer to [the Wphase wiki page](http://wphase.unistra.fr/wiki/doku.php/wphase)
 
 ## Dependencies
 
