@@ -5,9 +5,9 @@ compiler: gcc
 before_install:
     - sudo apt-get install csh
     - sudo apt-get install gfortran
+    - export WPHASE_HOME=$TRAVIS_BUILD_DIR
 
 install:
-    - export WPHASE_HOME=$TRAVIS_BUILD_DIR
     - cd ${WPHASE_HOME}/src
     - pwd
     - make
