@@ -88,7 +88,7 @@ typedef struct
   char   osacdir[FSIZE], psfile[FSIZE]      ; 
   char   wpbmfile[FSIZE], refbmfile[FSIZE], comments[NCOM][LSIZE];
   char   tsgsfile[FSIZE], xygsfile[FSIZE], o_covf[FSIZE] ; 
-  char   inifile[FSIZE], gs_flag[2]         ;
+  char   inifile[FSIZE], gs_flag[3]         ;
 } struct_opt ;
 
 /* Screening routines */
