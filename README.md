@@ -78,4 +78,6 @@ Development is hosten on GitHub in the [eost/wphase repository](https://github.c
 
 Instructions on how to run and use Wphase are available at the [Wphase wiki page](http://wphase.unistra.fr/wiki/doku.php/wphase).
 
-**Report bugs to: <zacharie.duputel@unistra.fr>**
+------ 
+
+**Report bugs to: <zacharie.duputel@unistra.fr> and <luis.rivera@unistra.fr>**
