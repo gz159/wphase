@@ -69,16 +69,14 @@ cd ${WPHASE_HOME}/src
 make -B
 ```
 
-
-## Development
-Development is hosten on GitHub in the [eost/wphase repository](https://github.com/eost/wphase).
-
-
 ## How to run W-phase
 
 Instructions on how to run and use Wphase are available at the [Wphase wiki page](http://wphase.unistra.fr/wiki/doku.php/wphase). 
 
 There is a quite complete document in the [Wphase documentation](http://wphase.unistra.fr/wiki/doku.php/wphase:documentation) and you can also check out the [Wphase tutorial page](http://wphase.unistra.fr/wiki/doku.php/wphase:tutorial) which includes an example of run.
+
+## Development
+Development is hosten on GitHub in the [eost/wphase repository](https://github.com/eost/wphase).
 
 -- 
 
