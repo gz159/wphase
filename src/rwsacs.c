@@ -358,7 +358,8 @@ void rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
     float *d;
     size_t bytes;
     FILE  *f;
-  
+
+    /* Open file */
     if ((f=fopen(file,"rb"))==NULL)
     {
         if (*ierror == 1) 
@@ -370,18 +371,28 @@ void rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
         return ;
     }
 
+    /* Go to data section */
     fseek(f,632,SEEK_SET);
+
+    /* Allocate temporary data vector */
     d = float_alloc(hdr->npts) ;
 
-    if ( fread(d,sz_of_f,hdr->npts,f) != hdr->npts )
+    /* Read data */
+    bytes = fread(d,sz_of_f,hdr->npts,f);
+    if ( bytes != (size_t)hdr->npts )
       {
         fprintf(stderr,"ERROR reading data in %s\n",file);
         exit(1);
-      }    
+      }
+
+    /* Float -> Double conversion */
     for (i=0 ; i<hdr->npts ; i++)
         data[i] = (double)d[i]; /* conversion from float to double */
-    /* e */
-    hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ; 
+    
+    /* Set e */
+    hdr->e = hdr->b + ((float)(hdr->npts - 1)) * hdr->delta ;
+
+    /* All done */
     free((void*)d);
     fclose(f);
 }
@@ -540,15 +551,9 @@ int wdat(FILE *f, sachdr *hdr, double *data)
 {
     const int sz_of_f = 4, sz_of_i = 4;
     int    i,npts;
-    size_t bytes;
     float *d;
 
     i = fseek(f,316,SEEK_SET);
-    if ( fread(&npts,sz_of_i,1,f) != 1 )
-      {
-        fprintf(stderr,"ERROR reading npts in sac file header\n");
-        exit(1);
-      }      
     if (i!=0)
         return 1;
     i = fseek(f,632,SEEK_SET);
