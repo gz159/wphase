@@ -123,7 +123,12 @@ int main(int argc, char *argv[])
     for(i=0; i<ns; i++)
     {
         flagr = fscanf (i_wp, "%s", datafile) ;
-        fgets(buf,200,i_wp); /* end of line */
+        /* Skip end of line */
+        if ( fgets(buf,200,i_wp) == NULL )
+          {
+           fprintf(stderr,"Error reading %s\n",file);
+           exit(1);
+          }      
         check_scan(1, flagr, i_wpfilname, i_wp)  ;
         rhdrsac(datafile,  &hd_data, &ierror)   ;
         /* Calculate azimuths, back-azimuths */
