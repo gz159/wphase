@@ -11,6 +11,7 @@ before_install:
   - export PATH=/home/travis/miniconda/bin:$PATH
   - conda update --yes conda
   - conda install --yes pip numpy matplotlib
+  - git clone https://github.com/eost/wphase_test.git
 
 install:
   - export WPHASE_HOME=$TRAVIS_BUILD_DIR
@@ -21,9 +22,10 @@ install:
 script:
   - ${WPHASE_HOME}/bin/wpinversion    -h &> /dev/null
   - ${WPHASE_HOME}/bin/wpinversion_gs -h &> /dev/null
-  - git clone https://github.com/eost/wphase_test.git
   - cd wphase_test
   - ./wphase_test.csh
+  - ${WPHASE_HOME}/bin/cmtascii run_test/WCMTSOLUTION
+  - ${WPHASE_HOME}/bin/cmtascii run_test/xy_WCMTSOLUTION
 
 notifications:
   email:
