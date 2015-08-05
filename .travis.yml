@@ -24,8 +24,6 @@ script:
   - git clone https://github.com/eost/wphase_test.git
   - cd wphase_test
   - ./wphase_test.csh
-  - cat run_test/WCMTSOLUTION
-  - cat run_test/xy_WCMTSOLUTION
 
 notifications:
   email:

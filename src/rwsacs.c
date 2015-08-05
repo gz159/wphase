@@ -254,20 +254,68 @@ void rhdrsac(char *file, sachdr *hdr, int *ierror)
     bytes += fread(&hdr->lovrok,sz_of_i,1,f);
     bytes += fread(&hdr->lcalda,sz_of_i,1,f);
     fseek(f,1*sz_of_i,SEEK_CUR);
-    fgets(hdr->kstnm,9,f);
-    fgets(hdr->kevnm,17,f);
-    fgets(hdr->khole,9,f);
-    fgets(hdr->ko,9,f);
-    fgets(hdr->ka,9,f);
+    if ( fgets(hdr->kstnm,9,f) == NULL )
+      {
+        fprintf(stderr,"Error reading kstnm in %s\n",file);
+        exit(1);
+      }      
+    if ( fgets(hdr->kevnm,17,f) == NULL )
+      {
+        fprintf(stderr,"Error reading kevnm in %s\n",file);
+        exit(1);
+      }      
+    if ( fgets(hdr->khole,9,f) == NULL )
+      {
+        fprintf(stderr,"Error reading khole in %s\n",file);
+        exit(1);
+      }      
+    if ( fgets(hdr->ko,9,f) == NULL )
+      {
+        fprintf(stderr,"Error reading ko in %s\n",file);
+        exit(1);
+      }      
+    if ( fgets(hdr->ka,9,f) == NULL )
+      {
+        fprintf(stderr,"Error reading ka in %s\n",file);
+        exit(1);
+      }      
     for (i=0 ; i<10 ; i++)
-        fgets(hdr->kt[i],9,f);
-    fgets(hdr->kf,9,f);
+      if ( fgets(hdr->kt[i],9,f) == NULL )
+        {
+          fprintf(stderr,"Error reading kt in %s\n",file);
+          exit(1);
+        }      
+    if ( fgets(hdr->kf,9,f) == NULL )
+      {
+        fprintf(stderr,"Error reading kf in %s\n",file);
+        exit(1);
+      }      
     for (i=0 ; i<3 ; i++)
-        fgets(hdr->kuser[i],9,f);
-    fgets(hdr->kcmpnm,9,f);
-    fgets(hdr->knetwk,9,f);
-    fgets(hdr->kdatrd,9, f);
-    fgets(hdr->kinst,9,f);
+      if ( fgets(hdr->kuser[i],9,f) == NULL )
+        {
+          fprintf(stderr,"Error reading kuser in %s\n",file);
+          exit(1);
+        }      
+    if ( fgets(hdr->kcmpnm,9,f) == NULL )
+      {
+        fprintf(stderr,"Error reading kcmpnm in %s\n",file);
+        exit(1);
+      }      
+    if ( fgets(hdr->knetwk,9,f) == NULL )
+      {
+        fprintf(stderr,"Error reading knetwk in %s\n",file);
+        exit(1);
+      }      
+    if ( fgets(hdr->kdatrd,9, f) == NULL )
+      {
+        fprintf(stderr,"Error reading kdatrd in %s\n",file);
+        exit(1);
+      }      
+    if ( fgets(hdr->kinst,9,f) == NULL )
+      {
+        fprintf(stderr,"Error reading kinst in %s\n",file);
+        exit(1);
+      }      
     /* If khole is not set, change it to -- */
     if (!strcmp(hdr->khole,"-12345  "))
         strcpy(hdr->khole,  "--      ");
