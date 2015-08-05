@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
         /* Skip end of line */
         if ( fgets(buf,200,i_wp) == NULL )
           {
-           fprintf(stderr,"Error reading %s\n",file);
+           fprintf(stderr,"Error reading %s\n",i_wpfilname);
            exit(1);
           }      
         check_scan(1, flagr, i_wpfilname, i_wp)  ;
