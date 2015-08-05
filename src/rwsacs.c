@@ -373,7 +373,7 @@ void rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
     fseek(f,632,SEEK_SET);
     d = float_alloc(hdr->npts) ;
 
-    if ( fread(d,sz_of_f,hdr->npts,f) != sz_of_f*hdr->npts )
+    if ( fread(d,sz_of_f,hdr->npts,f) != hdr->npts )
       {
         fprintf(stderr,"ERROR reading data in %s\n",file);
         exit(1);
@@ -544,7 +544,7 @@ int wdat(FILE *f, sachdr *hdr, double *data)
     float *d;
 
     i = fseek(f,316,SEEK_SET);
-    if ( fread(&npts,sz_of_i,1,f) != sz_of_i )
+    if ( fread(&npts,sz_of_i,1,f) != 1 )
       {
         fprintf(stderr,"ERROR reading npts in sac file header\n");
         exit(1);
