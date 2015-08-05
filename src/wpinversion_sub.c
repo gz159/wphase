@@ -1789,7 +1789,12 @@ void set_matrices (char ***sacfiles,sachdr **hd_synt,double ***data,
         if ( opt->op_pa <= 0 && opt->th_val <= 0)
         { 
             flag = fscanf (i_sac, "%s", datafile) ;
-            fgets(buf,LSIZE,i_sac); /* end of line */
+            /* Skip end of line */
+            if ( fgets(buf,LSIZE,i_sac) == NULL )
+              {
+                fprintf(stderr,"Error reading %s\n",opt->i_saclst);
+                exit(1);
+              }      
             check_scan(1, flag, opt->i_saclst, i_sac)  ;
             opt->wgt[ns] = 1.0;
         }
@@ -3112,7 +3117,12 @@ void set_data_vector(int nd,double *dv,double *tv,int *nsac,double ***data,char 
         if ( opt->op_pa <= 0 && opt->th_val <= 0) /* Read data file list */
         { 
             j = fscanf (i_sac,"%s",datafile) ;
-            fgets(buf,LSIZE,i_sac); /* end of line */
+            /* Skip end of line */
+            if ( fgets(buf,LSIZE,i_sac) == NULL )
+              {
+                fprintf(stderr,"Error reading %s\n",opt->i_saclst);
+                exit(1);
+              } 
             check_scan(1,j,opt->i_saclst,i_sac)  ;
             opt->wgt[ns] = 1.0;
         }
