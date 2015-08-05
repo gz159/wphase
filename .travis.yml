@@ -3,6 +3,7 @@ language: c
 compiler: gcc
 
 before_install:
+  - cd $TRAVIS_BUILD_DIR
   - sudo apt-get install csh
   - sudo apt-get install gfortran
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
@@ -16,10 +17,10 @@ before_install:
 install:
   - export WPHASE_HOME=$TRAVIS_BUILD_DIR
   - cd ${WPHASE_HOME}/src
-  - pwd
   - make
 
 script:
+  - cd $TRAVIS_BUILD_DIR
   - ${WPHASE_HOME}/bin/wpinversion    -h &> /dev/null
   - ${WPHASE_HOME}/bin/wpinversion_gs -h &> /dev/null
   - cd wphase_test
