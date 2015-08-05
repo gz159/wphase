@@ -49,10 +49,14 @@ int read_stats(char* file, char*** stats, char*** nets, float** stlats, float** 
     *stlons = float_calloc(nstat) ;
     for(jstat=0; jstat<nstat; jstat++)
     {
-        fgets(line,64,fp);
-        ns = sscanf(line, "%s%s%f%f", (*stats)[jstat], (*nets)[jstat],
+      if ( fgets(line,64,fp) == NULL )
+        {
+          fprintf(stderr,"Error reading %s\n",file);
+          exit(1);
+        }      
+      ns = sscanf(line, "%s%s%f%f", (*stats)[jstat], (*nets)[jstat],
                   &(*stlats)[jstat], &(*stlons)[jstat]);
-        check_scan(4, ns, file, fp) ;
+      check_scan(4, ns, file, fp) ;
     }
     fclose(fp);
     return(nstat);
