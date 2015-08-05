@@ -477,12 +477,11 @@ void minimax(float *y, int np, float *ymin, float *ymax)
 /*          data : array of data points            */
 int wdat(FILE *f, sachdr *hdr, double *data)
 {
-    const int sz_of_f = 4, sz_of_i = 4;
-    int    i,npts;
+    const int sz_of_f = 4;
+    int    i;
     float *d;
 
     i = fseek(f,316,SEEK_SET);
-    fread(&npts,sz_of_i,1,f);
     if (i!=0)
         return 1;
     i = fseek(f,632,SEEK_SET);
