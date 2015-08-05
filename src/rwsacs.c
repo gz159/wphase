@@ -256,64 +256,64 @@ void rhdrsac(char *file, sachdr *hdr, int *ierror)
     fseek(f,1*sz_of_i,SEEK_CUR);
     if ( fgets(hdr->kstnm,9,f) == NULL )
       {
-        fprintf(stderr,"Error reading kstnm in %s\n",file);
+        fprintf(stderr,"ERROR reading kstnm in %s\n",file);
         exit(1);
       }      
     if ( fgets(hdr->kevnm,17,f) == NULL )
       {
-        fprintf(stderr,"Error reading kevnm in %s\n",file);
+        fprintf(stderr,"ERROR reading kevnm in %s\n",file);
         exit(1);
       }      
     if ( fgets(hdr->khole,9,f) == NULL )
       {
-        fprintf(stderr,"Error reading khole in %s\n",file);
+        fprintf(stderr,"ERROR reading khole in %s\n",file);
         exit(1);
       }      
     if ( fgets(hdr->ko,9,f) == NULL )
       {
-        fprintf(stderr,"Error reading ko in %s\n",file);
+        fprintf(stderr,"ERROR reading ko in %s\n",file);
         exit(1);
       }      
     if ( fgets(hdr->ka,9,f) == NULL )
       {
-        fprintf(stderr,"Error reading ka in %s\n",file);
+        fprintf(stderr,"ERROR reading ka in %s\n",file);
         exit(1);
       }      
     for (i=0 ; i<10 ; i++)
       if ( fgets(hdr->kt[i],9,f) == NULL )
         {
-          fprintf(stderr,"Error reading kt in %s\n",file);
+          fprintf(stderr,"ERROR reading kt in %s\n",file);
           exit(1);
         }      
     if ( fgets(hdr->kf,9,f) == NULL )
       {
-        fprintf(stderr,"Error reading kf in %s\n",file);
+        fprintf(stderr,"ERROR reading kf in %s\n",file);
         exit(1);
       }      
     for (i=0 ; i<3 ; i++)
       if ( fgets(hdr->kuser[i],9,f) == NULL )
         {
-          fprintf(stderr,"Error reading kuser in %s\n",file);
+          fprintf(stderr,"ERROR reading kuser in %s\n",file);
           exit(1);
         }      
     if ( fgets(hdr->kcmpnm,9,f) == NULL )
       {
-        fprintf(stderr,"Error reading kcmpnm in %s\n",file);
+        fprintf(stderr,"ERROR reading kcmpnm in %s\n",file);
         exit(1);
       }      
     if ( fgets(hdr->knetwk,9,f) == NULL )
       {
-        fprintf(stderr,"Error reading knetwk in %s\n",file);
+        fprintf(stderr,"ERROR reading knetwk in %s\n",file);
         exit(1);
       }      
     if ( fgets(hdr->kdatrd,9, f) == NULL )
       {
-        fprintf(stderr,"Error reading kdatrd in %s\n",file);
+        fprintf(stderr,"ERROR reading kdatrd in %s\n",file);
         exit(1);
       }      
     if ( fgets(hdr->kinst,9,f) == NULL )
       {
-        fprintf(stderr,"Error reading kinst in %s\n",file);
+        fprintf(stderr,"ERROR reading kinst in %s\n",file);
         exit(1);
       }      
     /* If khole is not set, change it to -- */
@@ -325,7 +325,7 @@ void rhdrsac(char *file, sachdr *hdr, int *ierror)
     /* Check bytes counter */
     if ( bytes != 92 )
       {
-        fprintf(stderr,"Error reading %s\n",file);
+        fprintf(stderr,"ERROR reading sac header of %s\n",file);
         exit(1);
       }
 
@@ -356,6 +356,7 @@ void rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
     const int sz_of_f = 4;
     int i;
     float *d;
+    size_t bytes;
     FILE  *f;
   
     if ((f=fopen(file,"rb"))==NULL)
@@ -372,7 +373,11 @@ void rdatsac(char *file, sachdr *hdr, double *data, int *ierror)
     fseek(f,632,SEEK_SET);
     d = float_alloc(hdr->npts) ;
 
-    fread(d,sz_of_f,hdr->npts,f);
+    if ( fread(d,sz_of_f,hdr->npts,f) != sz_of_f*hdr->npts )
+      {
+        fprintf(stderr,"ERROR reading data in %s\n",file);
+        exit(1);
+      }    
     for (i=0 ; i<hdr->npts ; i++)
         data[i] = (double)d[i]; /* conversion from float to double */
     /* e */
@@ -535,10 +540,15 @@ int wdat(FILE *f, sachdr *hdr, double *data)
 {
     const int sz_of_f = 4, sz_of_i = 4;
     int    i,npts;
+    size_t bytes;
     float *d;
 
     i = fseek(f,316,SEEK_SET);
-    fread(&npts,sz_of_i,1,f);
+    if ( fread(&npts,sz_of_i,1,f) != sz_of_i )
+      {
+        fprintf(stderr,"ERROR reading npts in sac file header\n");
+        exit(1);
+      }      
     if (i!=0)
         return 1;
     i = fseek(f,632,SEEK_SET);
