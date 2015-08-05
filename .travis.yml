@@ -11,11 +11,15 @@ install:
   - cd ${WPHASE_HOME}/src
   - pwd
   - make
-  - cd
 
 script:
   - ${WPHASE_HOME}/bin/wpinversion    -h
   - ${WPHASE_HOME}/bin/wpinversion_gs -h
+  - cd $TRAVIS_BUILD_DIR
+  - wget http://wphase.unistra.fr/run_test.tgz
+  - tar xvzf run_test.tgz
+  - cd run_test
+  - ./run_test.csh
 
 notifications:
   email:
