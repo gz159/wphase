@@ -5,6 +5,12 @@ compiler: gcc
 before_install:
   - sudo apt-get install csh
   - sudo apt-get install gfortran
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda
+  - conda install --yes pip numpy matplotlib
 
 install:
   - export WPHASE_HOME=$TRAVIS_BUILD_DIR
@@ -13,13 +19,13 @@ install:
   - make
 
 script:
-  - ${WPHASE_HOME}/bin/wpinversion    -h
-  - ${WPHASE_HOME}/bin/wpinversion_gs -h
-  - cd $TRAVIS_BUILD_DIR
-  - wget http://wphase.unistra.fr/run_test.tgz
-  - tar xvzf run_test.tgz
-  - cd run_test
-  - ./run_test.csh
+  - ${WPHASE_HOME}/bin/wpinversion    -h > wpinversion_help
+  - ${WPHASE_HOME}/bin/wpinversion_gs -h > wpinversion_gs_help
+  - git clone https://github.com/eost/wphase_test.git
+  - cd wphase_test
+  - ./wphase_test.csh
+  - cat run_test/WCMTSOLUTION
+  - cat run_test/xy_WCMTSOLUTION
 
 notifications:
   email:
