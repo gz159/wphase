@@ -134,7 +134,7 @@ def main(argv):
     NL = 5 # Number of lines
 
     # Read i_master
-    conf  = utils.parseConfig(imaster)
+    conf  = utils.parseConfig(IMASTER)
     if conf.has_key('LENGTH_GLOBAL'):
         LENGTH_GLOBAL   = conf['LENGTH_GLOBAL']
     if conf.has_key('LENGTH_REGIONAL'):
