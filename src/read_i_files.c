@@ -342,10 +342,7 @@ void decode_wp_win(buffer, wp_win4)
 /*         >nb of keywords                      */
 /*                                              */
 /* Output : eq : parameters in a structure      */
-void get_i_master(file, keys, n, eq)
-    int  n ;
-    char *file, **keys  ; 
-    struct_quake_params *eq ;
+void get_i_master(char *file, char **keys, int n, struct_quake_params *eq)
 {
     int  i, nb, nb2, tmp, nl;
     char *line,*buf;
