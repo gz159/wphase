@@ -20,10 +20,9 @@ install:
   - make
 
 script:
-  - cd $TRAVIS_BUILD_DIR
+  - cd ${TRAVIS_BUILD_DIR}/wphase_test
   - ${WPHASE_HOME}/bin/wpinversion    -h &> /dev/null
   - ${WPHASE_HOME}/bin/wpinversion_gs -h &> /dev/null
-  - cd wphase_test
   - ./wphase_test.csh
 
 notifications:
