@@ -94,7 +94,6 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     /* Reference solution */
     if (opt->ref_flag)
     {
-        eval3b = double_alloc(3)  ;
         get_planes(eq->vm[1], eval3b, evec3, &strike1b,&dip1b,&rake1b, &strike2b,&dip2b,&rake2b) ;
         M0b = ((fabs(eval3b[0]) + fabs(eval3b[2])) * (double)POW) / 2. ; 
         Mwb = (log10(M0b) - 16.1) / 1.5 ;
@@ -752,6 +751,7 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
         fprintf(o_ini, "RRMS                 = %9.5f\n", 1000.*eq->global_rms[2]);
         fprintf(o_ini, "RRMS_r               = %9.5f\n", eq->global_rms[2]/eq->global_rms[3]); 
     }
+
     // concatenate all G_eigenvalues in a string
 /*
     int G_eig_size = sizeof(eigvals);  
@@ -771,17 +771,16 @@ void output_products(struct_opt *opt, struct_quake_params *eq,
     /* ************************* */
     /* END INI OUTPUT */
     fclose(o_ini);
+
     /* Memory Freeing */
-    if (opt->ref_flag)
-    {
-        free((void*)eval3b)   ;
-    }
     for(i=0 ; i<3 ; i++) 
     {
         free((void*)evec3[i]) ;
     }
-    free((void*)eval3a)   ;
-    free((void*)evec3)   ;
+    free((void*)evec3)  ;    
+    free((void*)eval3a) ;
+    free((void*)eval3b) ;
+    free((void*)str_stations);
 
     free((void*)nbcmp)    ;
     free((void*)buf)      ;
