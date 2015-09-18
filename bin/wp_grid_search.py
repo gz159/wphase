@@ -275,33 +275,33 @@ def main(argv):
     evname  = iconfig['EVNAME'].replace(' ','_').replace(',','')
 
     if iconfig.has_key('TS_NIT'):
-        TS_NIT   = iconfig['TS_NIT']
+        TS_NIT   = int(iconfig['TS_NIT'])
     if iconfig.has_key('TS_DT'):
-        TS_DT    = iconfig['TS_DT']
+        TS_DT    = float(iconfig['TS_DT'])
     if iconfig.has_key('TSBOUNDS'):
-        TSBOUNDS = iconfig['TSBOUNDS']
+        TSBOUNDS = float(iconfig['TSBOUNDS'])
 
     if iconfig.has_key('XY_NIT'):
-        XY_NIT   = iconfig['XY_NIT']
+        XY_NIT   = int(iconfig['XY_NIT'])
     if iconfig.has_key('XY_DX'):
-        XY_DX    = iconfig['XY_DX']
+        XY_DX    = float(iconfig['XY_DX'])
     if iconfig.has_key('XY_NX'):
-        XY_NX    = iconfig['XY_NX']
+        XY_NX    = int(iconfig['XY_NX'])
     if iconfig.has_key('XY_NOPT'):
-        XY_NOPT  = iconfig['XY_NOPT']
+        XY_NOPT  = int(iconfig['XY_NOPT'])
 
     if iconfig.has_key('XYZ_NIT'):
-        XYZ_NIT  = iconfig['XYZ_NIT']
+        XYZ_NIT  = int(iconfig['XYZ_NIT'])
     if iconfig.has_key('XYZ_DX'):
-        XYZ_DX   = iconfig['XYZ_DX']
+        XYZ_DX   = float(iconfig['XYZ_DX'])
     if iconfig.has_key('XYZ_NX'):
-        XYZ_NX   = iconfig['XYZ_NX']
+        XYZ_NX   = int(iconfig['XYZ_NX'])
     if iconfig.has_key('XYZ_NOPT'):
-        XYZ_NOPT = iconfig['XYZ_NOPT']
+        XYZ_NOPT = int(iconfig['XYZ_NOPT'])
     if iconfig.has_key('DDEP'):
-        DDEP     = iconfig['DDEP']
+        DDEP     = float(iconfig['DDEP'])
     if iconfig.has_key('MINDEP'):
-        MINDEP   = iconfig['MINDEP']
+        MINDEP   = float(iconfig['MINDEP'])
 
     # Set comments in output ps file
     Median    = '-med '
