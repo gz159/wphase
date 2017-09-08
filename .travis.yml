@@ -1,5 +1,7 @@
 language: c
 
+sudo: enabled
+
 compiler: gcc
 
 before_install:
@@ -29,4 +31,3 @@ notifications:
   email:
     recipients:
       - zacharie.duputel@unistra.fr
-      - luis.rivera@unistra.fr
