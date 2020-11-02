@@ -137,6 +137,8 @@ void jacobi(double **a, int n, int np, double *d, double **v, int *nrot)
 }
 
 
+# sort the moment tensor eigenvalue in descent order and corresponding eigen vector in descent order too
+
 void eigsrt(double *d, double **v, int n)
 {
     int    i, j, k ;
